@@ -24,7 +24,6 @@ export default function Level2() {
     }
   }, [router]);
 
-  // Updated validation logic
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
 
@@ -50,11 +49,9 @@ export default function Level2() {
       return;
     }
 
-    // generate key
     const k = genKey(2);
     localStorage.setItem("techhunt_key_2", k);
 
-    // store Level 2 info
     localStorage.setItem("techhunt_name_2", name.trim());
     localStorage.setItem("techhunt_team_2", teamName.trim());
     localStorage.setItem("techhunt_email_2", email.trim());
@@ -68,7 +65,6 @@ export default function Level2() {
       className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
       style={{ background: "#0f172a" }}
     >
-      {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-yellow-500/5 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 -right-1/4 w-[150%] h-[150%] bg-yellow-500/5 rounded-full blur-3xl"></div>
@@ -106,7 +102,6 @@ export default function Level2() {
         <main className="bg-gradient-to-br from-white/3 to-transparent rounded-3xl p-8 md:p-12 ring-1 ring-white/6 backdrop-blur-sm shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-            {/* Left info panel */}
             <div className="flex flex-col gap-6 justify-center">
               <div className="rounded-xl p-6 bg-gradient-to-br from-amber-500/8 to-yellow-400/6 border border-white/6">
                 <div className="text-sm text-amber-300 uppercase font-semibold">
@@ -132,11 +127,9 @@ export default function Level2() {
               <div className="h-1 w-full bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-80" />
             </div>
 
-            {/* Right form section */}
             <div className="flex flex-col justify-center">
               <form onSubmit={submit} className="space-y-4">
 
-                {/* Level 1 key input */}
                 <div>
                   <label className="block text-sm text-slate-200 mb-1">
                     Previous Level Key (Level 1)
@@ -150,7 +143,6 @@ export default function Level2() {
                   />
                 </div>
 
-                {/* Full Name + Team Name Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-slate-200 mb-1">
@@ -182,7 +174,6 @@ export default function Level2() {
                   </div>
                 </div>
 
-                {/* Email */}
                 <div>
                   <label className="block text-sm text-slate-200 mb-1">
                     IITP Email

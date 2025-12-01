@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import XenithNav from "@/components/XenithNav";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { Inter, Poppins } from "next/font/google";
+import Confetti from "react-confetti";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const poppins = Poppins({
@@ -36,35 +37,85 @@ interface Event {
   _isEventEnded?: boolean;
 }
 
-// Xenith Countdown component
-const Countdown: React.FC = () => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isEventLive: boolean;
+}
+
+interface CountdownProps {
+  timeLeft: TimeLeft;
+  setTimeLeft: React.Dispatch<React.SetStateAction<TimeLeft>>;
+}
+
+const Countdown: React.FC<CountdownProps> = ({ timeLeft, setTimeLeft }) => {
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 0,
+    height: typeof window !== "undefined" ? window.innerHeight : 0,
   });
+  const eventDate = new Date("2025-12-03T00:00:00").getTime();
+  const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
-    const target = new Date("2025-12-03T00:00:00").getTime();
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     const update = () => {
       const now = Date.now();
-      const diff = target - now;
+      const diff = eventDate - now;
+
       if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setTimeLeft((prev) => ({
+          ...prev,
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          isEventLive: true,
+        }));
+
+        if (!hasTriggered) {
+          setShowConfetti(true);
+          setHasTriggered(true);
+          // Stop confetti after 8 seconds
+          const timer = setTimeout(() => {
+            setShowConfetti(false);
+          }, 8000);
+          return () => clearTimeout(timer);
+        }
         return;
       }
+
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((diff / (1000 * 60)) % 60);
       const seconds = Math.floor((diff / 1000) % 60);
-      setTimeLeft({ days, hours, minutes, seconds });
+
+      setTimeLeft({
+        days,
+        hours,
+        minutes,
+        seconds,
+        isEventLive: false,
+      });
     };
 
     update();
     const t = setInterval(update, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [hasTriggered]);
 
   const units = [
     { label: "Days", value: timeLeft.days },
@@ -74,47 +125,62 @@ const Countdown: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-gradient-to-r from-[#22143a]/40 to-[#0b1228]/40 border border-white/10 backdrop-blur-sm shadow-[0_0_18px_rgba(167,139,250,0.25)]">
-          <svg
-            className="w-4 h-4 text-[#e8d8ff] drop-shadow-[0_0_6px_rgba(212,179,255,0.9)]"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-          >
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeOpacity="0.8"
-              strokeWidth="1.8"
-            />
-            <path
-              d="M12 7v6l4 2"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-
-          <span className="text-sm text-gray-300">
-            Event starts on <b>Dec 3, 2025</b>
-          </span>
+    <div className="max-w-4xl mx-auto py-8 px-4 relative">
+      {showConfetti && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          <Confetti
+            width={windowSize.width}
+            height={windowSize.height}
+            recycle={false}
+            numberOfPieces={500}
+            gravity={0.2}
+            colors={["#ba9efe", "#d4b3ff", "#6366f1", "#a78bfa", "#8b5cf6"]}
+          />
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-24">
-        {units.map((u) => (
-          <div
-            key={u.label}
-            className="relative flex items-center justify-center"
-          >
-            <div className="w-full">
-              <div
-                className={`
+      {!timeLeft.isEventLive && (
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-gradient-to-r from-[#22143a]/40 to-[#0b1228]/40 border border-white/10 backdrop-blur-sm shadow-[0_0_18px_rgba(167,139,250,0.25)]">
+            <svg
+              className="w-4 h-4 text-[#e8d8ff] drop-shadow-[0_0_6px_rgba(212,179,255,0.9)]"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeOpacity="0.8"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M12 7v6l4 2"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="text-sm text-gray-300">
+              Event starts on <b>Dec 3, 2025</b>
+            </span>
+          </div>
+        </div>
+      )}
+
+      {!timeLeft.isEventLive && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-24">
+          {units.map((u) => (
+            <div
+              key={u.label}
+              className="relative flex items-center justify-center"
+            >
+              <div className="w-full">
+                <div
+                  className={`
               rounded-2xl p-5 text-center
               bg-gradient-to-b from-white/5 to-white/2
               border border-white/10 backdrop-blur-sm
@@ -128,38 +194,39 @@ const Countdown: React.FC = () => {
 
               transition-all duration-300 ease-out
             `}
-              >
-                <div className="flex items-center justify-center" aria-hidden>
-                  <div className="relative">
-                    <div
-                      className="absolute inset-0 rounded-full blur-2xl animate-pulse-slow"
-                      style={{
-                        background:
-                          "linear-gradient(135deg,#ba9efe33,#6366f120)",
-                      }}
-                    />
-                    <div
-                      className="relative text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight"
-                      style={{
-                        background:
-                          "linear-gradient(90deg,#ba9efe 0%, #d4b3ff 40%, #6366f1 100%)",
-                        WebkitBackgroundClip: "text",
-                        color: "transparent",
-                      }}
-                    >
-                      {String(u.value).padStart(2, "0")}
+                >
+                  <div className="flex items-center justify-center" aria-hidden>
+                    <div className="relative">
+                      <div
+                        className="absolute inset-0 rounded-full blur-2xl animate-pulse-slow"
+                        style={{
+                          background:
+                            "linear-gradient(135deg,#ba9efe33,#6366f120)",
+                        }}
+                      />
+                      <div
+                        className="relative text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight"
+                        style={{
+                          background:
+                            "linear-gradient(90deg,#ba9efe 0%, #d4b3ff 40%, #6366f1 100%)",
+                          WebkitBackgroundClip: "text",
+                          color: "transparent",
+                        }}
+                      >
+                        {String(u.value).padStart(2, "0")}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-3 text-xs md:text-sm uppercase tracking-wider text-gray-300">
-                  {u.label}
+                  <div className="mt-3 text-xs md:text-sm uppercase tracking-wider text-gray-300">
+                    {u.label}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <style jsx>{`
         .animate-pulse-slow {
@@ -188,6 +255,14 @@ const Page = () => {
   const { scrollYProgress } = useScroll();
   const translateY = useTransform(scrollYProgress, [0, 0.3], ["0%", "100%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isEventLive: false,
+  });
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -341,6 +416,21 @@ const Page = () => {
                       <h2 className="text-white text-xs md:text-sm font-medium tracking-[0.15em] text-center md:text-left uppercase font-mono opacity-90 mt-1 md:mt-2">
                         Where Innovation Touches Infinity
                       </h2>
+                      {timeLeft.isEventLive && (
+                        <div className="mt-2 md:mt-3 flex items-center justify-center md:justify-start gap-2">
+                          <div className="relative flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/30">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-400"></span>
+                            </span>
+                            <span className="text-purple-200 text-xs font-medium">
+                              XENITH is{" "}
+                              <span className="font-bold text-white">LIVE</span>{" "}
+                              Now
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </span>
                   </span>
                 </div>
@@ -512,7 +602,7 @@ const Page = () => {
               </div>
 
               <div className="relative z-10 container mx-auto px-4 md:px-12 lg:px-20 pt-4">
-                <Countdown />
+                <Countdown timeLeft={timeLeft} setTimeLeft={setTimeLeft} />
                 <div className="text-center mb-12 md:mb-16">
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <div className="h-1 w-8 md:w-12 bg-gradient-to-r from-transparent to-[#ba9efe]"></div>

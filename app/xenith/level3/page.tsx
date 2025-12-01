@@ -31,13 +31,11 @@ export default function Level3() {
 
     const needed = localStorage.getItem("techhunt_key_2");
 
-    // LEVEL 2 KEY CHECK
     if (!needed || prevKeyInput.trim().toUpperCase() !== needed) {
       alert("Incorrect Level 2 Key.");
       return;
     }
 
-    // INPUT VALIDATION
     if (!name.trim()) {
       alert("Full name is required.");
       return;
@@ -53,11 +51,9 @@ export default function Level3() {
       return;
     }
 
-    // Generate Level 3 Key
     const k = genKey(3);
     localStorage.setItem("techhunt_key_3", k);
 
-    // Save user metadata
     localStorage.setItem("techhunt_name_3", name.trim());
     localStorage.setItem("techhunt_team_3", teamName.trim());
     localStorage.setItem("techhunt_email_3", email.trim());
@@ -71,7 +67,6 @@ export default function Level3() {
       className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
       style={{ background: "#0f172a" }}
     >
-      {/* Background Glow */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-yellow-500/5 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 -right-1/4 w-[150%] h-[150%] bg-yellow-500/5 rounded-full blur-3xl"></div>
@@ -79,7 +74,6 @@ export default function Level3() {
       </div>
 
       <div className="w-full max-w-4xl mx-auto">
-        {/* HEADER */}
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -108,11 +102,9 @@ export default function Level3() {
           </div>
         </header>
 
-        {/* MAIN */}
         <main className="bg-gradient-to-br from-white/3 to-transparent rounded-3xl p-8 md:p-12 ring-1 ring-white/6 backdrop-blur-sm shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-            {/* LEFT DESCRIPTION */}
             <div className="flex flex-col gap-6 justify-center">
               <div className="rounded-xl p-6 bg-gradient-to-br from-amber-500/8 to-yellow-400/6 border border-white/6">
                 <div className="text-sm text-amber-300 uppercase font-semibold">
@@ -140,11 +132,9 @@ export default function Level3() {
               <div className="h-1 w-full bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-80" />
             </div>
 
-            {/* RIGHT FORM */}
             <div className="flex flex-col justify-center">
               <form onSubmit={submit} className="space-y-4">
 
-                {/* Level 2 Key */}
                 <div>
                   <label className="block text-sm text-slate-200 mb-1">
                     Previous Level Key (Level 2)
@@ -158,7 +148,6 @@ export default function Level3() {
                   />
                 </div>
 
-                {/* Full Name + Team Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-slate-200 mb-1">Full Name</label>
@@ -186,7 +175,6 @@ export default function Level3() {
                   </div>
                 </div>
 
-                {/* IITP Email */}
                 <div>
                   <label className="block text-sm text-slate-200 mb-1">IITP Email</label>
                   <input
@@ -203,7 +191,6 @@ export default function Level3() {
                   </p>
                 </div>
 
-                {/* Buttons */}
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
