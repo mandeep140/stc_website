@@ -1,49 +1,151 @@
 "use client";
 import React, { useState } from "react";
-import Modal from "../../../components/xenith/Modal";
+import { useRouter } from "next/navigation";
+import Modal from "@/components/xenith/Modal";
 
-function genKey(level: number) {
-  return `TH-${level}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+interface FormData {
+  name: string;
+  teamName: string;
+  email: string;
 }
 
 export default function Level1() {
-  const [name, setName] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    teamName: "",
+    email: "",
+  });
+  const [error, setError] = useState("");
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [teamName, setTeamName] = useState("");
+  const [sendingOTP, setSendingOTP] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState({
+    title: 'Level 1 Key Generated!',
+    subtitle: 'Your key has been successfully generated. Keep it safe for the next level.'
+  });
 
-  function submit(e?: React.FormEvent) {
-    e?.preventDefault();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    if (!name.trim()) {
-      alert("Please enter your full name.");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // If OTP already sent and entered, verify on submit
+    if (otpSent && otp.every(digit => digit)) {
+      await handleOTPVerify(otp);
       return;
     }
 
-    if (teamName.trim().length < 3 || teamName.trim().length > 50) {
-      alert("Team Name must be 3–50 characters.");
-      return;
+    // Otherwise, send OTP
+    await handleSendOTP();
+  };
+
+  const handleOTPVerify = async (otpArray: string[]) => {
+    const otp = otpArray.join('');
+    setVerifyingOTP(true);
+    setError("");
+    
+    try {
+      console.log('Verifying OTP...', { 
+        email: formData.email, 
+        otpLength: otp.length,
+        otpType: typeof otp,
+        otpValue: otp
+      });
+
+      // Ensure OTP is a string and properly formatted
+      const otpString = otp.toString().trim();
+      if (otpString.length !== 6 || !/^\d{6}$/.test(otpString)) {
+        throw new Error('Please enter a valid 6-digit OTP');
+      }
+
+      const response = await fetch('/api/xenith/level1/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...formData, 
+          otp: otpString // Ensure OTP is sent as a string
+        })
+      });
+
+      const data = await response.json();
+      console.log('Verification response:', { status: response.status, data });
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Verification failed. Please try again.');
+      }
+
+      if (!data.level1Key) {
+        throw new Error('No level key received. Please try again.');
+      }
+
+      console.log('OTP verification successful');
+      setGeneratedKey(data.level1Key);
+      setOtp(['', '', '', '', '', '']);
+      setOtpSent(false);
+      
+      // Set the success message based on whether this is an existing user
+      setSuccessMessage({
+        title: data.existing ? 'Welcome Back!' : 'Level 1 Key Generated!',
+        subtitle: data.existing 
+          ? 'Here is your existing key. Keep it safe for the next level.'
+          : 'Your key has been successfully generated. Keep it safe for the next level.'
+      });
+      
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error('OTP Verification Error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to verify OTP';
+      setError(errorMessage);
+    } finally {
+      setVerifyingOTP(false);
     }
+  };
 
-    if (!/^[^@\s]+@iitp\.ac\.in$/.test(email)) {
-      alert("Please enter a valid IITP email (example@iitp.ac.in).");
-      return;
-    }
-
-    const k = genKey(1);
-
-    localStorage.setItem("techhunt_key_1", k);
-    localStorage.setItem("techhunt_name_1", name.trim());
-    localStorage.setItem("techhunt_team_1", teamName.trim());
-    localStorage.setItem("techhunt_email_1", email.trim());
-
-    setGeneratedKey(k);
-    setModalOpen(true);
+  const handleSendOTP = async () => {
+  // Validate email format
+  if (!/^[^@\s]+@iitp\.ac\.in$/i.test(formData.email)) {
+    setError('Please use your IITP email address');
+    return;
   }
 
+  setSendingOTP(true);
+  setError('');
+
+  try {
+    const response = await fetch('/api/xenith/level1/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: formData.email })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send OTP. Please try again.');
+    }
+
+    setOtpSent(true);
+    setOtp(['', '', '', '', '', '']); // Reset OTP input
+    setError(''); // Clear any previous errors
+  } catch (err) {
+    console.error('Error sending OTP:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Failed to send OTP. Please try again.';
+    setError(errorMessage);
+  } finally {
+    setSendingOTP(false);
+  }
+};
+
   return (
-    <div
+    <div 
       className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
       style={{ background: "#0f172a" }}
     >
@@ -72,7 +174,6 @@ export default function Level1() {
 
         <main className="bg-gradient-to-br from-white/3 to-transparent rounded-3xl p-8 md:p-12 ring-1 ring-white/6 backdrop-blur-sm shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
             <div className="flex flex-col gap-6 justify-center">
               <div className="rounded-xl p-6 bg-gradient-to-br from-amber-500/8 to-yellow-400/6 border border-white/6">
                 <div className="text-sm text-amber-300 font-semibold uppercase">
@@ -94,22 +195,27 @@ export default function Level1() {
                   </div>
                 </div>
               </div>
-
               <div className="h-1 w-full bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-80"></div>
             </div>
 
             <div className="flex flex-col justify-center">
-              <form onSubmit={submit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
                   <div>
                     <label className="block text-sm text-slate-200 mb-1">
                       Full Name
                     </label>
                     <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
                       className="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400"
                       placeholder="Enter your full name"
                       required
@@ -121,15 +227,17 @@ export default function Level1() {
                       Team Name
                     </label>
                     <input
-                      value={teamName}
-                      onChange={(e) => setTeamName(e.target.value)}
+                      type="text"
+                      name="teamName"
+                      value={formData.teamName}
+                      onChange={handleChange}
                       className="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400"
                       placeholder="Enter your team name"
                       minLength={3}
                       maxLength={50}
                       required
                     />
-                    <p className="text-xs text-slate-400 mt-1">3–50 characters</p>
+                    <p className="text-xs text-slate-400 mt-1">3-50 characters</p>
                   </div>
                 </div>
 
@@ -137,49 +245,113 @@ export default function Level1() {
                   <label className="block text-sm text-slate-200 mb-1">
                     IITP Email
                   </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400"
-                    placeholder="username@iitp.ac.in"
-                    pattern="[^@\s]+@iitp\.ac\.in$"
-                    required
-                  />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setOtpSent(false);
+                      }}
+                      className="flex-1 rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400"
+                      placeholder="name_roll@iitp.ac.in"
+                      pattern="[^@\s]+@iitp\.ac\.in$"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendOTP}
+                      disabled={sendingOTP}
+                      className="w-full sm:w-auto px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-center"
+                    >
+                      {sendingOTP ? 'Sending...' : otpSent ? 'Resend OTP' : 'Send OTP'}
+                    </button>
+                  </div>
                   <p className="text-xs text-slate-400 mt-1">
-                    Must be your official IITP email.
+                    {otpSent ? 'OTP sent! Check your official IITP email.' : 'Must be your official IITP email.'}
                   </p>
                 </div>
+
+                {otpSent && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-slate-200 mb-2 text-center">
+                        Enter the 6-digit code sent to {formData.email}
+                      </label>
+                      <div className="flex justify-center gap-2 mb-4">
+                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                          <input
+                            key={index}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={otp[index] || ''}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              if (value || e.target.value === '') {
+                                const newOtp = [...otp];
+                                newOtp[index] = value;
+                                setOtp(newOtp);
+                                
+                                // Auto-focus next input
+                                if (value && index < 5) {
+                                  const nextInput = document.getElementById(`otp-${index + 1}`);
+                                  if (nextInput) nextInput.focus();
+                                }
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              // Handle backspace
+                              if (e.key === 'Backspace' && !otp[index] && index > 0) {
+                                const prevInput = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
+                                if (prevInput) prevInput.focus();
+                              }
+                            }}
+                            id={`otp-${index}`}
+                            className="w-12 h-14 text-2xl text-center bg-white/5 border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => handleOTPVerify(otp)}
+                      disabled={verifyingOTP || otp.some(digit => !digit)}
+                      className="w-full rounded-xl px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {verifyingOTP ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Verifying...
+                        </span>
+                      ) : 'Verify and Continue'}
+                    </button>
+                    
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        disabled={sendingOTP}
+                        className="text-sm text-amber-400 hover:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {sendingOTP ? 'Sending new code...' : 'Resend code'}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="flex-1 rounded-xl px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-900 font-semibold shadow hover:scale-[1.01] transition-transform"
+                    className="flex-1 rounded-xl px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-900 font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Claim Level 1 Key
+                    Submit
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.removeItem("techhunt_key_1");
-                      localStorage.removeItem("techhunt_name_1");
-                      localStorage.removeItem("techhunt_email_1");
-                      localStorage.removeItem("techhunt_team_1");
-                      setName("");
-                      setEmail("");
-                      setTeamName("");
-                      setGeneratedKey(null);
-                      alert("Level 1 data cleared.");
-                    }}
-                    className="px-4 py-3 rounded-xl border border-white/6 text-white"
-                  >
-                    Reset
-                  </button>
-                </div>
-
-                <div className="text-xs text-slate-400 pt-2">
-                  Your unique key will be stored securely. Keep it safe for Level 2.
                 </div>
               </form>
             </div>
@@ -190,20 +362,16 @@ export default function Level1() {
           <div>Tech Hunt • {new Date().getFullYear()}</div>
           <div className="hidden sm:block">Play fair. Good luck.</div>
         </footer>
-      </div>
 
-      <Modal
-        open={modalOpen}
-        title={generatedKey ? "Congratulations - Level 1 unlocked!" : "Input Required"}
-        subtitle={
-          generatedKey
-            ? "You cracked Level 1! This is your unique key — keep it safe."
-            : "Please fill out all required fields."
-        }
-        keyValue={generatedKey}
-        onClose={() => setModalOpen(false)}
-        level={1}
-      />
+        <Modal
+          open={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title={successMessage.title}
+          subtitle={successMessage.subtitle}
+          keyValue={generatedKey}
+          level={1}
+        />
+      </div>
     </div>
   );
 }

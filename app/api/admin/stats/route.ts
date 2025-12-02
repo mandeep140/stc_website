@@ -5,6 +5,7 @@ import Notifications from '@/schema/NotificationsSchema'
 import RegistrationTemplate from '@/schema/RegistrationTemplateSchema'
 import RegistrationSubmission from '@/schema/RegistrationSubmissionSchema'
 import CompetitionResult from '@/schema/CompetitionResultSchema'
+import Xenith from '@/schema/XenithSchema'
 import { getServerSession } from 'next-auth'
 
 export async function GET() {
@@ -23,12 +24,15 @@ export async function GET() {
         const RegistrationSubmissionsCount = await RegistrationSubmission.countDocuments()
         const CompetitionResultsCount = await CompetitionResult.countDocuments()
 
+        const techHuntResultsCount = await Xenith.countDocuments()
+
         const stats = {
             events: EventsCount,
             notifications: NotificationsCount,
             registrations: RegistrationFormsCount,
             registrationResponses: RegistrationSubmissionsCount,
-            competitionResults: CompetitionResultsCount
+            competitionResults: CompetitionResultsCount,
+            techHuntResults: techHuntResultsCount
         }
 
         return NextResponse.json(
