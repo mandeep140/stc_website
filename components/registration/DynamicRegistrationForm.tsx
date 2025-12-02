@@ -68,16 +68,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
   const [submitted, setSubmitted] = useState(false);
   const [uploadingImages, setUploadingImages] = useState<{ [key: string]: boolean }>({});
 
-  // OTP verification states
   const [emailField, setEmailField] = useState<Field | null>(null);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [otpTimer, setOtpTimer] = useState(0);
-  const [showOtpSentModal, setShowOtpSentModal] = useState(false);
-  const [otpEmail, setOtpEmail] = useState('');
 
   // Password protection states
   const [formPassword, setFormPassword] = useState('');
@@ -86,13 +77,6 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
   useEffect(() => {
     fetchTemplate();
   }, [slug]);
-
-  useEffect(() => {
-    if (otpTimer > 0) {
-      const timer = setTimeout(() => setOtpTimer(otpTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [otpTimer]);
 
   const fetchTemplate = async () => {
     try {
@@ -122,84 +106,84 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
     }
   };
 
-  const sendOTP = async () => {
-    if (!emailField || !formData[emailField.key]) {
-      if (emailField) {
-        setErrors({ ...errors, [emailField.key]: 'Email is required for verification' });
-      }
-      return;
-    }
+  // const sendOTP = async () => {
+  //   if (!emailField || !formData[emailField.key]) {
+  //     if (emailField) {
+  //       setErrors({ ...errors, [emailField.key]: 'Email is required for verification' });
+  //     }
+  //     return;
+  //   }
 
-    const email = formData[emailField.key];
+  //   const email = formData[emailField.key];
 
-    // Validate email domain if restricted
-    if (emailField.emailRestriction === 'iitp' && !email.toLowerCase().endsWith('@iitp.ac.in')) {
-      setErrors({ ...errors, [emailField.key]: 'Only @iitp.ac.in email addresses are allowed' });
-      return;
-    }
+  //   // Validate email domain if restricted
+  //   if (emailField.emailRestriction === 'iitp' && !email.toLowerCase().endsWith('@iitp.ac.in')) {
+  //     setErrors({ ...errors, [emailField.key]: 'Only @iitp.ac.in email addresses are allowed' });
+  //     return;
+  //   }
 
-    setSendingOtp(true);
-    const trimmedEmail = email.trim().toLowerCase();
-    setOtpEmail(trimmedEmail);
+  //   setSendingOtp(true);
+  //   const trimmedEmail = email.trim().toLowerCase();
+  //   setOtpEmail(trimmedEmail);
 
-    try {
-      const response = await fetch('/api/registration/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          registrationSlug: slug
-        })
-      });
+  //   try {
+  //     const response = await fetch('/api/registration/send-otp', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         email: trimmedEmail,
+  //         registrationSlug: slug
+  //       })
+  //     });
 
-      if (response.ok) {
-        setOtpSent(true);
-        setOtpTimer(330); // 5 minutes 30 seconds
-        setErrors({ ...errors, [emailField.key]: '' });
-        setShowOtpSentModal(true);
-      } else {
-        const error = await response.json();
-        setErrors({ ...errors, [emailField.key]: error.error });
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      setErrors({ ...errors, [emailField.key]: 'Failed to send OTP' });
-    } finally {
-      setSendingOtp(false);
-    }
-  };
+  //     if (response.ok) {
+  //       setOtpSent(true);
+  //       setOtpTimer(330); // 5 minutes 30 seconds
+  //       setErrors({ ...errors, [emailField.key]: '' });
+  //       setShowOtpSentModal(true);
+  //     } else {
+  //       const error = await response.json();
+  //       setErrors({ ...errors, [emailField.key]: error.error });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error sending OTP:', error);
+  //     setErrors({ ...errors, [emailField.key]: 'Failed to send OTP' });
+  //   } finally {
+  //     setSendingOtp(false);
+  //   }
+  // };
 
-  const verifyOTP = async () => {
-    if (!emailField || !otp) {
-      return;
-    }
+  // const verifyOTP = async () => {
+  //   if (!emailField || !otp) {
+  //     return;
+  //   }
 
-    setVerifyingOtp(true);
-    try {
-      const response = await fetch('/api/registration/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData[emailField.key]?.trim().toLowerCase(),
-          otp: otp.trim()
-        })
-      });
+  //   setVerifyingOtp(true);
+  //   try {
+  //     const response = await fetch('/api/registration/verify-otp', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         email: formData[emailField.key]?.trim().toLowerCase(),
+  //         otp: otp.trim()
+  //       })
+  //     });
 
-      if (response.ok) {
-        setOtpVerified(true);
-        setOtpSent(false);
-        setOtp('');
-      } else {
-        const error = await response.json();
-        alert(error.error);
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      alert('Failed to verify OTP');
-    } finally {
-      setVerifyingOtp(false);
-    }
-  };
+  //     if (response.ok) {
+  //       setOtpVerified(true);
+  //       setOtpSent(false);
+  //       setOtp('');
+  //     } else {
+  //       const error = await response.json();
+  //       alert(error.error);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error verifying OTP:', error);
+  //     alert('Failed to verify OTP');
+  //   } finally {
+  //     setVerifyingOtp(false);
+  //   }
+  // };
 
   const shouldShowField = (field: Field): boolean => {
     // Check if this is a team member field
@@ -256,12 +240,6 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
     if (errors[key]) {
       setErrors({ ...errors, [key]: '' });
     }
-
-    // Reset OTP verification if email changes
-    if (emailField && key === emailField.key && otpVerified) {
-      setOtpVerified(false);
-      setOtpSent(false);
-    }
   };
 
   const handleCheckboxChange = (key: string, value: string, checked: boolean) => {
@@ -308,6 +286,14 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
         return;
       }
 
+      // Validate email domain restriction
+      if (field.type === 'email' && field.emailRestriction === 'iitp' && value) {
+        if (!value.toLowerCase().endsWith('@iitp.ac.in')) {
+          newErrors[field.key] = 'Only @iitp.ac.in email addresses are allowed';
+          return;
+        }
+      }
+
       if (value && field.validation) {
         if (field.validation.minLength && value.length < field.validation.minLength) {
           newErrors[field.key] = field.validation.customMessage || `Minimum length is ${field.validation.minLength}`;
@@ -344,11 +330,6 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
       return;
     }
 
-    if (emailField && !otpVerified) {
-      alert('Please verify your email with OTP before submitting');
-      return;
-    }
-
     // Password protection check
     if (template?.passwordProtected) {
       if (!formPassword) {
@@ -369,7 +350,6 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
         body: JSON.stringify({
           registrationSlug: slug,
           data: formData,
-          emailVerified: otpVerified,
           password: template?.passwordProtected ? formPassword : undefined
         })
       });
@@ -399,7 +379,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
 
     const commonProps = {
       id: field.key,
-      disabled: submitting || (field.type === 'email' && emailField?.key === field.key && otpVerified)
+      disabled: submitting
     };
 
     return (
@@ -409,58 +389,6 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
           {field.required && <span className="text-red-500 ml-1">*</span>}
           {field.important && <span className="text-yellow-500 ml-1 font-bold">⚠</span>}
         </Label>
-
-        {/* Email field with OTP verification */}
-        {field.type === 'email' && emailField?.key === field.key && (
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <Input
-                {...commonProps}
-                type="email"
-                value={formData[field.key] || ''}
-                onChange={(e) => handleChange(field.key, e.target.value)}
-                placeholder={field.placeholder}
-                className={errors[field.key] ? 'border-red-500' : otpVerified ? 'border-green-500' : ''}
-              />
-              {otpVerified ? (
-                <Button type="button" disabled className="bg-green-500">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Verified
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  onClick={sendOTP}
-                  disabled={sendingOtp || !formData[field.key] || otpTimer > 0}
-                >
-                  {sendingOtp && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {otpTimer > 0 ? `Resend (${Math.floor(otpTimer / 60)}:${(otpTimer % 60).toString().padStart(2, '0')})` : 'Send OTP'}
-                </Button>
-              )}
-            </div>
-            {field.emailRestriction === 'iitp' && (
-              <p className="text-xs text-blue-500">Only @iitp.ac.in email addresses are allowed</p>
-            )}
-            {otpSent && !otpVerified && (
-              <div className="gap-2 mt-2">
-                <div className='flex gap-2'>
-                  <Input
-                    type="text"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    maxLength={6}
-                  />
-                  <Button type="button" onClick={verifyOTP} disabled={verifyingOtp || otp.length !== 6}>
-                    {verifyingOtp && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Verify
-                  </Button>
-                </div>
-                <span className=" text-blue-500 break-all text-xs">can't find OTP? check your spam/junk folder</span>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Image upload field */}
         {field.type === 'image' && (
@@ -551,16 +479,20 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
           </div>
         )}
 
-        {/* Other email fields (not the primary OTP-verified email) */}
-        {field.type === 'email' && emailField?.key !== field.key && (
-          <Input
-            {...commonProps}
-            type="email"
-            value={formData[field.key] || ''}
-            onChange={(e) => handleChange(field.key, e.target.value)}
-            placeholder={field.placeholder}
-            className={errors[field.key] ? 'border-red-500' : ''}
-          />
+        {field.type === 'email' && (
+          <div className="space-y-1">
+            <Input
+              {...commonProps}
+              type="email"
+              value={formData[field.key] || ''}
+              onChange={(e) => handleChange(field.key, e.target.value)}
+              placeholder={field.placeholder}
+              className={errors[field.key] ? 'border-red-500' : ''}
+            />
+            {field.emailRestriction === 'iitp' && (
+              <p className="text-xs text-blue-600">Only @iitp.ac.in email addresses are allowed</p>
+            )}
+          </div>
         )}
 
         {!['textarea', 'select', 'radio', 'checkbox', 'email', 'image'].includes(field.type) && (
@@ -610,7 +542,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
           <div className="text-6xl">✓</div>
           <h2 className="text-2xl font-bold text-green-600">Registration Successful!</h2>
           <p className="text-gray-600">Your registration has been submitted successfully.</p>
-          <Button onClick={() => { setSubmitted(false); fetchTemplate(); setOtpVerified(false); }}>
+          <Button onClick={() => { setSubmitted(false); fetchTemplate(); }}>
             Submit Another Registration
           </Button>
         </CardContent>
@@ -638,50 +570,6 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
 
   return (
     <div className="max-w-2xl mx-auto mt-8">
-      {/* OTP Sent Modal */}
-      <Dialog open={showOtpSentModal} onOpenChange={setShowOtpSentModal}>
-        <DialogContent className="w-[95%] max-w-md mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="relative z-10 px-6 py-8 sm:px-8">
-            <DialogHeader className="items-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50 mb-5">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              </div>
-
-              <DialogTitle className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-2">
-                OTP Sent Successfully
-              </DialogTitle>
-
-              <DialogDescription asChild>
-                <div className="space-y-6 mt-2 w-full">
-                  <p className="text-base text-gray-600 text-center">
-                    We've sent a 6-digit OTP to <br className="hidden sm:inline" />
-                    <span className="font-semibold text-gray-900 break-all">{otpEmail}</span>
-                  </p>
-
-                  <div className="bg-blue-50/80 p-4 rounded-xl">
-                    <div className="flex items-start space-x-3">
-                      <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm sm:text-base text-blue-700 font-medium">
-                        <span className="text-red-600 font-bold">Important:</span> Please check your Junk or Spam folder if you don't see the email in your inbox.
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="w-full py-6 text-base font-medium rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                    onClick={() => setShowOtpSentModal(false)}
-                  >
-                    Got it!
-                  </Button>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <Card>
         <CardHeader>
           <CardTitle>{template.name}</CardTitle>
@@ -776,7 +664,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
             )}
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={submitting || (emailField ? !otpVerified : false)}>
+              <Button type="submit" disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

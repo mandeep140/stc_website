@@ -30,11 +30,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const hasEmailField = template.fields.some((f: any) => f.type === 'email');
-    if (hasEmailField && !emailVerified) {
-      return NextResponse.json({ error: 'Email verification required' }, { status: 400 });
-    }
-
     const errors: { [key: string]: string } = {};
     
     template.fields.forEach((field: any) => {
