@@ -71,7 +71,7 @@ export default function AdminTechHuntPage() {
 
   useEffect(() => {
     fetchResults();
-  },);
+  }, []);
 
   const fetchResults = async () => {
     try {
