@@ -429,31 +429,16 @@ export default function Level2() {
                   </p>
                 </div>
 
-                <div className="md:col-span-2 bg-gradient-to-br from-amber-600/10 to-amber-500/5 border border-amber-500/20 p-5 rounded-xl flex flex-col">
-                  <div className="flex items-center gap-2 mb-3">
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                      className="text-amber-400"
+                <div className="md:col-span-2 bg-gradient-to-br from-amber-600/10 to-amber-500/5 border border-amber-500/20 p-5 rounded-xl flex flex-col items-center justify-center">
+                  <div className="text-center">
+                    <h3 className="text-amber-300 font-semibold text-lg mb-4">Ready for the next challenge?</h3>
+                    <button 
+                      onClick={() => window.open('/xenith/tech-hunt/3rd-clue.jpg', '_blank')}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/20"
                     >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="16" x2="12" y2="12"></line>
-                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                    <h3 className="text-amber-300 font-semibold text-lg">Clue for Level 3</h3>
-                  </div>
-                  <div className="bg-black/20 p-4 rounded-lg border border-amber-500/20 flex-1 flex items-center">
-                    <p className="text-amber-100 text-base leading-relaxed">
-                      <span className="block mb-2">🔍 <span className="font-medium">The next step lies where the sun rises, but not where it sets.</span></span>
-                      <span className="block">🕵️ <span className="font-medium">Look for the path that's often overlooked, where shadows are cast at noon.</span></span>
-                    </p>
+                      
+                      Get Clue for Next Level
+                    </button>
                   </div>
                 </div>
               </div>

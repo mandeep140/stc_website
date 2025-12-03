@@ -20,26 +20,34 @@ export default function Level1() {
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({
-    title: 'Level 1 Key Generated!',
-    subtitle: 'Your key has been successfully generated. Keep it safe for the next level.'
+    title: "Level 1 Key Generated!",
+    subtitle:
+      "Your key has been successfully generated. Keep it safe for the next level.",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // If OTP already sent and entered, verify on submit
-    if (otpSent && otp.every(digit => digit)) {
-      await handleOTPVerify(otp);
+    // If OTP is entered, verify it
+    if (otpSent) {
+      if (otp.every((digit) => digit)) {
+        await handleOTPVerify(otp);
+      } else if (otp.every((digit) => !digit)) {
+        // If OTP fields are empty, resend OTP
+        await handleSendOTP();
+      } else {
+        setError("Please enter a valid 6-digit OTP");
+      }
       return;
     }
 
@@ -48,61 +56,62 @@ export default function Level1() {
   };
 
   const handleOTPVerify = async (otpArray: string[]) => {
-    const otp = otpArray.join('');
+    const otp = otpArray.join("");
     setVerifyingOTP(true);
     setError("");
-    
+
     try {
-      console.log('Verifying OTP...', { 
-        email: formData.email, 
+      console.log("Verifying OTP...", {
+        email: formData.email,
         otpLength: otp.length,
         otpType: typeof otp,
-        otpValue: otp
+        otpValue: otp,
       });
 
       // Ensure OTP is a string and properly formatted
       const otpString = otp.toString().trim();
       if (otpString.length !== 6 || !/^\d{6}$/.test(otpString)) {
-        throw new Error('Please enter a valid 6-digit OTP');
+        throw new Error("Please enter a valid 6-digit OTP");
       }
 
-      const response = await fetch('/api/xenith/level1/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...formData, 
-          otp: otpString // Ensure OTP is sent as a string
-        })
+      const response = await fetch("/api/xenith/level1/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          otp: otpString, // Ensure OTP is sent as a string
+        }),
       });
 
       const data = await response.json();
-      console.log('Verification response:', { status: response.status, data });
-      
+      console.log("Verification response:", { status: response.status, data });
+
       if (!response.ok) {
-        throw new Error(data.error || 'Verification failed. Please try again.');
+        throw new Error(data.error || "Verification failed. Please try again.");
       }
 
       if (!data.level1Key) {
-        throw new Error('No level key received. Please try again.');
+        throw new Error("No level key received. Please try again.");
       }
 
-      console.log('OTP verification successful');
+      console.log("OTP verification successful");
       setGeneratedKey(data.level1Key);
-      setOtp(['', '', '', '', '', '']);
+      setOtp(["", "", "", "", "", ""]);
       setOtpSent(false);
-      
+
       // Set the success message based on whether this is an existing user
       setSuccessMessage({
-        title: data.existing ? 'Welcome Back!' : 'Level 1 Key Generated!',
-        subtitle: data.existing 
-          ? 'Here is your existing key. Keep it safe for the next level.'
-          : 'Your key has been successfully generated. Keep it safe for the next level.'
+        title: data.existing ? "Welcome Back!" : "Level 1 Key Generated!",
+        subtitle: data.existing
+          ? "Here is your existing key. Keep it safe for the next level."
+          : "Your key has been successfully generated. Keep it safe for the next level.",
       });
-      
+
       setShowSuccessModal(true);
     } catch (err) {
-      console.error('OTP Verification Error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to verify OTP';
+      console.error("OTP Verification Error:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to verify OTP";
       setError(errorMessage);
     } finally {
       setVerifyingOTP(false);
@@ -110,42 +119,45 @@ export default function Level1() {
   };
 
   const handleSendOTP = async () => {
-  // Validate email format
-  if (!/^[^@\s]+@iitp\.ac\.in$/i.test(formData.email)) {
-    setError('Please use your IITP email address');
-    return;
-  }
-
-  setSendingOTP(true);
-  setError('');
-
-  try {
-    const response = await fetch('/api/xenith/level1/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: formData.email })
-    });
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to send OTP. Please try again.');
+    // Validate email format
+    if (!/^[^@\s]+@iitp\.ac\.in$/i.test(formData.email)) {
+      setError("Please use your IITP email address");
+      return;
     }
 
-    setOtpSent(true);
-    setOtp(['', '', '', '', '', '']); // Reset OTP input
-    setError(''); // Clear any previous errors
-  } catch (err) {
-    console.error('Error sending OTP:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Failed to send OTP. Please try again.';
-    setError(errorMessage);
-  } finally {
-    setSendingOTP(false);
-  }
-};
+    setSendingOTP(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/xenith/level1/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send OTP. Please try again.");
+      }
+
+      setOtpSent(true);
+      setOtp(["", "", "", "", "", ""]); // Reset OTP input
+      setError(""); // Clear any previous errors
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to send OTP. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setSendingOTP(false);
+    }
+  };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
       style={{ background: "#0f172a" }}
     >
@@ -159,9 +171,15 @@ export default function Level1() {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <img src="/images/stc-logo.jpg" className="w-12 h-12 rounded-full" />
+              <img
+                src="/images/stc-logo.jpg"
+                className="w-12 h-12 rounded-full"
+              />
               <div className="h-8 w-px bg-white/20"></div>
-              <img src="/xenith/logo.png" className="w-12 h-12 object-contain" />
+              <img
+                src="/xenith/logo.png"
+                className="w-12 h-12 object-contain"
+              />
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">
               Treasure Hunt
@@ -174,26 +192,45 @@ export default function Level1() {
 
         <main className="bg-gradient-to-br from-white/3 to-transparent rounded-3xl p-8 md:p-12 ring-1 ring-white/6 backdrop-blur-sm shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex flex-col gap-6 justify-center">
-              <div className="rounded-xl p-6 bg-gradient-to-br from-amber-500/8 to-yellow-400/6 border border-white/6">
-                <div className="text-sm text-amber-300 font-semibold uppercase">
-                  Level 1 • Route
+            <div className="flex flex-col gap-6">
+              <div className="rounded-xl p-6 bg-gradient-to-br from-amber-500/10 to-yellow-400/8 border border-white/6 backdrop-blur-sm shadow-lg hover:shadow-amber-500/10 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-base font-semibold text-amber-300">
+                    Level 1 • The Beginning
+                  </h3>
                 </div>
-                <br></br>
-                <p className="text-sm text-white mb-4">
-                 <strong>Please check your inbox and junk mail folder for the OTP.</strong>
-                </p>
 
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/6 flex items-center justify-center text-amber-300 font-bold text-lg">
-                    1
-                  </div>
-                  <div className="text-sm text-slate-300">
-                    Keep this key safe - required for Level 2.
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                    <p className="text-sm text-slate-200 mb-2">
+                      <span className="font-medium text-amber-200">
+                        For OTP
+                      </span>{" "}
+                      Check your inbox and spam/junk folder.
+                    </p>
+                    <div className="flex items-start gap-2">
+                      <svg
+                        className="w-4 h-4 mt-0.5 text-amber-400 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <p className="text-xs text-slate-400">
+                        Your key will be required to access Level 2.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="h-1 w-full bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-80"></div>
+
+              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
             </div>
 
             <div className="flex flex-col justify-center">
@@ -235,7 +272,9 @@ export default function Level1() {
                       maxLength={50}
                       required
                     />
-                    <p className="text-xs text-slate-400 mt-1">3-50 characters</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      3-50 characters
+                    </p>
                   </div>
                 </div>
 
@@ -263,11 +302,17 @@ export default function Level1() {
                       disabled={sendingOTP}
                       className="w-full sm:w-auto px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-center"
                     >
-                      {sendingOTP ? 'Sending...' : otpSent ? 'Resend OTP' : 'Send OTP'}
+                      {sendingOTP
+                        ? "Sending..."
+                        : otpSent
+                          ? "Resend OTP"
+                          : "Send OTP"}
                     </button>
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
-                    {otpSent ? 'OTP sent! Check your official IITP email.' : 'Must be your official IITP email.'}
+                    {otpSent
+                      ? "OTP sent! Check your official IITP email."
+                      : "Must be your official IITP email."}
                   </p>
                 </div>
 
@@ -284,25 +329,33 @@ export default function Level1() {
                             type="text"
                             inputMode="numeric"
                             maxLength={1}
-                            value={otp[index] || ''}
+                            value={otp[index] || ""}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '');
-                              if (value || e.target.value === '') {
+                              const value = e.target.value.replace(/\D/g, "");
+                              if (value || e.target.value === "") {
                                 const newOtp = [...otp];
                                 newOtp[index] = value;
                                 setOtp(newOtp);
-                                
+
                                 // Auto-focus next input
                                 if (value && index < 5) {
-                                  const nextInput = document.getElementById(`otp-${index + 1}`);
+                                  const nextInput = document.getElementById(
+                                    `otp-${index + 1}`
+                                  );
                                   if (nextInput) nextInput.focus();
                                 }
                               }
                             }}
                             onKeyDown={(e) => {
                               // Handle backspace
-                              if (e.key === 'Backspace' && !otp[index] && index > 0) {
-                                const prevInput = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
+                              if (
+                                e.key === "Backspace" &&
+                                !otp[index] &&
+                                index > 0
+                              ) {
+                                const prevInput = document.getElementById(
+                                  `otp-${index - 1}`
+                                ) as HTMLInputElement;
                                 if (prevInput) prevInput.focus();
                               }
                             }}
@@ -312,32 +365,15 @@ export default function Level1() {
                         ))}
                       </div>
                     </div>
-                    
-                    <button
-                      type="button"
-                      onClick={() => handleOTPVerify(otp)}
-                      disabled={verifyingOTP || otp.some(digit => !digit)}
-                      className="w-full rounded-xl px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {verifyingOTP ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Verifying...
-                        </span>
-                      ) : 'Verify and Continue'}
-                    </button>
-                    
-                    <div className="text-center">
+
+                    <div className="text-center mt-2">
                       <button
                         type="button"
                         onClick={handleSendOTP}
                         disabled={sendingOTP}
                         className="text-sm text-amber-400 hover:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {sendingOTP ? 'Sending new code...' : 'Resend code'}
+                        {sendingOTP ? "Sending new code..." : "Resend code"}
                       </button>
                     </div>
                   </div>
@@ -346,9 +382,34 @@ export default function Level1() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="flex-1 rounded-xl px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-900 font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={verifyingOTP || (otpSent && otp.some((digit) => !digit))}
+                    className="w-full rounded-xl px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit
+                    {verifyingOTP ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {otpSent ? "Verifying..." : "Submitting..."}
+                      </span>
+                    ) : otpSent ? "Verify & Continue" : "Submit"}
                   </button>
                 </div>
               </form>

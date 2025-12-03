@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FaKey } from "react-icons/fa";
 import {
   GiTreasureMap,
@@ -22,6 +22,33 @@ export default function Modal({
   level?: number;
 }) {
   if (!open) return null;
+
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCopy = () => {
+    if (keyValue) {
+      navigator.clipboard?.writeText(keyValue);
+      setCopied(true);
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+        copyTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -72,11 +99,15 @@ export default function Modal({
                   {keyValue}
                 </span>
                 <button
-                  onClick={() => navigator.clipboard?.writeText(keyValue)}
-                  className="ml-3 text-xs border border-white/6 text-white px-2 py-1 rounded-md bg-white/6 hover:bg-white/10"
-                  aria-label="copy key"
+                  onClick={handleCopy}
+                  className={`ml-3 text-xs border ${
+                    copied ? 'border-green-500/50' : 'border-white/6'
+                  } text-white px-2 py-1 rounded-md ${
+                    copied ? 'bg-green-500/10' : 'bg-white/6 hover:bg-white/10'
+                  } transition-colors min-w-[50px]`}
+                  aria-label={copied ? 'Copied!' : 'Copy key'}
                 >
-                  Copy
+                  {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
             </div>
@@ -85,6 +116,15 @@ export default function Modal({
           <p className="mt-4 text-xs text-slate-300 max-w-sm">
             Keep this key safe - you will need it to access the next route.
           </p>
+
+          {level === 1 && (
+            <button 
+              onClick={() => window.open('/xenith/tech-hunt/2nd-clue.jpg', '_blank')}
+              className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/20 text-sm"
+            >
+              Get Clue for Next Level
+            </button>
+          )}
         </div>
       </div>
     </div>
