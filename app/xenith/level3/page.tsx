@@ -316,7 +316,7 @@ export default function Level3() {
                     3
                   </div>
                   <div className="text-sm text-slate-300">
-                    This is your final key — save it securely.
+                    This is your final key - save it securely.
                   </div>
                 </div>
               </div>
@@ -431,6 +431,7 @@ export default function Level3() {
                     {otpSent ? (
                       <p className="text-xs text-slate-400 mt-3 text-center">
                         Enter the 6-digit code sent to <span className="text-amber-300">{email || verifyEmail}</span>
+                        <br /><strong>Please check your inbox and junk mail folder for the OTP.</strong>
                       </p>
                     ) : (
                       <p className="text-xs text-slate-400 mt-2">

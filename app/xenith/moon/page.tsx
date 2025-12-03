@@ -16,7 +16,16 @@ export default function Level2() {
   const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [level2Key, setLevel2Key] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const router = useRouter();
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,11 +135,11 @@ export default function Level2() {
         throw new Error(data.error || 'Verification failed');
       }
 
-      // Store the key and show modal instead of redirecting
+      // Store the key and show success modal
       setLevel2Key(data.level2Key);
       setOtpModalOpen(false); // Close the OTP modal
-      setShowSuccessModal(true); // Show success modal
       setOtp(['', '', '', '', '', '']); // Reset OTP input
+      setCompleted(true); // Show success screen
     } catch (err) {
       console.error('Error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Verification failed';
@@ -187,7 +196,7 @@ export default function Level2() {
                     2
                   </div>
                   <div className="text-sm text-slate-300">
-                    Keep this key safe — required for Level 3.
+                    Keep this key safe - required for Level 3.
                   </div>
                 </div>
               </div>
@@ -246,7 +255,7 @@ export default function Level2() {
                     </button>
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
-                    {otpSent ? 'OTP sent! Check your email to verify connection.' : 'Optional: Verify your email connection.'}
+                    {otpSent ? 'OTP sent! Check your inbox and junk mail folder for the OTP.' : 'Optional: Verify your email connection.'}
                   </p>
                 </div>
 
@@ -351,14 +360,125 @@ export default function Level2() {
         </footer>
       </div>
 
-      <Modal
-  open={showSuccessModal}
-  onClose={() => setShowSuccessModal(false)}
-  title="Level 2 Key Generated!"
-  subtitle="Your key has been successfully generated. Keep it safe for the next level."
-  keyValue={level2Key}
-  level={2}
-/>
+      {completed ? (
+        <div className="fixed inset-0 flex items-center justify-center p-6 bg-[#0f172a] z-50">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-yellow-500/5 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 -right-1/4 w-[150%] h-[150%] bg-yellow-500/5 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-1/4 left-1/4 w-[120%] h-[120%] bg-yellow-500/5 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="w-full max-w-2xl mx-auto relative z-10">
+            <div className="bg-gradient-to-br from-white/3 to-transparent rounded-3xl p-8 md:p-12 ring-1 ring-white/6 backdrop-blur-sm shadow-2xl text-center">
+              <div className="text-amber-400 text-6xl mb-6 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]">
+                ✓
+              </div>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">
+                Level 2 Completed!
+              </h1>
+              <p className="text-lg text-slate-300 mb-8">
+                You've successfully completed Level 2 of Treasure Hunt!
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Compact Key Section */}
+                <div className="bg-gradient-to-br from-amber-500/8 to-yellow-400/6 border border-white/6 p-4 rounded-xl">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-xs text-amber-300 font-semibold uppercase">
+                      Level 2 Key
+                    </p>
+                    <button
+                      onClick={() => copyToClipboard(level2Key)}
+                      className="p-1.5 text-amber-300 hover:text-amber-200 transition-colors rounded-full hover:bg-amber-500/10"
+                      title={copied ? "Copied!" : "Copy to clipboard"}
+                    >
+                      {copied ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-lg font-mono break-all text-white truncate" title={level2Key}>
+                    {level2Key}
+                  </p>
+                </div>
+
+                <div className="md:col-span-2 bg-gradient-to-br from-amber-600/10 to-amber-500/5 border border-amber-500/20 p-5 rounded-xl flex flex-col">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      className="text-amber-400"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <h3 className="text-amber-300 font-semibold text-lg">Clue for Level 3</h3>
+                  </div>
+                  <div className="bg-black/20 p-4 rounded-lg border border-amber-500/20 flex-1 flex items-center">
+                    <p className="text-amber-100 text-base leading-relaxed">
+                      <span className="block mb-2">🔍 <span className="font-medium">The next step lies where the sun rises, but not where it sets.</span></span>
+                      <span className="block">🕵️ <span className="font-medium">Look for the path that's often overlooked, where shadows are cast at noon.</span></span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-400 mt-6">
+                Please save this key securely. You'll need it for Level 3.
+              </p>
+            </div>
+
+            <footer className="mt-8 text-sm text-slate-400 flex justify-between">
+              <div>Tech Hunt • {new Date().getFullYear()}</div>
+              <div className="hidden sm:block">Play fair. Good luck.</div>
+            </footer>
+          </div>
+        </div>
+      ) : (
+        <Modal
+          open={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title="Level 2 Key Generated!"
+          subtitle="Your key has been successfully generated. Keep it safe for the next level."
+          keyValue={level2Key}
+          level={2}
+        />
+      )}
     </div>
   );
 }

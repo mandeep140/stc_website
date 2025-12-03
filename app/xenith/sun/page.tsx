@@ -179,11 +179,9 @@ export default function Level1() {
                 <div className="text-sm text-amber-300 font-semibold uppercase">
                   Level 1 • Route
                 </div>
-                <h2 className="mt-3 text-2xl md:text-3xl font-bold text-white">
-                  Predict the first route
-                </h2>
-                <p className="mt-2 text-sm text-slate-200">
-                  Enter your details to claim your key for Level 2.
+                <br></br>
+                <p className="text-sm text-white mb-4">
+                 <strong>Please check your inbox and junk mail folder for the OTP.</strong>
                 </p>
 
                 <div className="mt-6 flex items-center gap-3">
@@ -191,7 +189,7 @@ export default function Level1() {
                     1
                   </div>
                   <div className="text-sm text-slate-300">
-                    Keep this key safe — required for Level 2.
+                    Keep this key safe - required for Level 2.
                   </div>
                 </div>
               </div>
