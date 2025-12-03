@@ -117,9 +117,9 @@ export default function Modal({
             Keep this key safe - you will need it to access the next route.
           </p>
 
-          {level === 1 && (
+          {(level === 1 || level === 2) && (
             <button 
-              onClick={() => window.open('/xenith/tech-hunt/2nd-clue.jpg', '_blank')}
+              onClick={() => window.open(`/xenith/tech-hunt/${level === 1 ? '2nd' : '3rd'}-clue.jpg`, '_blank')}
               className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/20 text-sm"
             >
               Get Clue for Next Level

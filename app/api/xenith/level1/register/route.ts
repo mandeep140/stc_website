@@ -1,65 +1,129 @@
 import { NextResponse } from 'next/server';
-import { setOTP } from '@/lib/redis';
-import { sendXenithOTP } from '@/lib/nodemailer';
 import Xenith from '@/schema/XenithSchema';
+import { Document } from 'mongoose';
 import connectDB from '@/lib/connectdb';
+
+interface IXenith extends Document {
+  email: string;
+  name: string;
+  teamName: string;
+  level1Key?: string;
+  level2Key?: string;
+  level3Key?: string;
+  verifiedAt: {
+    level1?: Date;
+    level2?: Date;
+    level3?: Date;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const normalize = (value?: string) => value?.trim();
 
+function generateUniqueKey(email: string, teamName: string): string {
+  // Generate a random 5-character alphanumeric string
+  const randomChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 5; i++) {
+    result += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
+  }
+  return `XEN-L1-${result}`;
+}
+
 export async function POST(req: Request) {
   try {
-    const { teamName, email, name } = await req.json();
+    console.log('Registration request received');
+    const body = await req.json();
+    console.log('Request body:', JSON.stringify(body, null, 2));
+    
+    const { teamName, email, name } = body;
+
+    if (!email || !name || !teamName) {
+      console.error('Missing required fields:', { email, name, teamName });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'All fields are required',
+        missingFields: {
+          email: !email,
+          name: !name,
+          teamName: !teamName
+        }
+      }, { status: 400 });
+    }
 
     const normalizedEmail = normalize(email)?.toLowerCase();
     const normalizedName = normalize(name);
     const normalizedTeam = normalize(teamName);
     
     if (!normalizedTeam || !normalizedEmail || !normalizedName) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+      console.error('Normalization failed:', { normalizedEmail, normalizedName, normalizedTeam });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid input format',
+        normalized: {
+          email: normalizedEmail,
+          name: normalizedName,
+          teamName: normalizedTeam
+        }
+      }, { status: 400 });
     }
 
     if (!/^[^@\s]+@iitp\.ac\.in$/.test(normalizedEmail)) {
-      return NextResponse.json({ error: 'Please use an IITP email address' }, { status: 400 });
-    }
-
-    await connectDB();
-
-    const existing = await Xenith.findOne({ email: normalizedEmail });
-    const existingKey = existing?.key;
-    
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log('Generating OTP for:', normalizedEmail);
-    
-    try {
-      // Store the OTP and get the stored value back to ensure consistency
-      const storedOTP = await setOTP(normalizedEmail, otp);
-      console.log('OTP stored in Redis:', storedOTP ? '***' : 'failed');
-      
-      // Send the OTP via email
-      console.log('Sending OTP email to:', normalizedEmail);
-      await sendXenithOTP({ 
-        email: normalizedEmail, 
-        otp: storedOTP, // Use the stored OTP to ensure consistency
-        level: 1 
-      });
-      
-      console.log('OTP sent successfully to:', normalizedEmail);
-    } catch (emailError) {
-      console.error('Failed to process OTP:', emailError);
+      console.error('Invalid email format:', normalizedEmail);
       return NextResponse.json({ 
-        error: 'Failed to process OTP request. Please try again.' 
-      }, { status: 500 });
+        success: false, 
+        error: 'Please use an IITP email address (example@iitp.ac.in)' 
+      }, { status: 400 });
     }
 
+    console.log('Connecting to database...');
+    await connectDB();
+    console.log('Database connected');
+
+    // Check if email already exists
+    console.log('Checking for existing user...');
+    const existingUser = await Xenith.findOne<IXenith>({ email: normalizedEmail }).select('level1Key').lean();
+    
+    if (existingUser && existingUser.level1Key) {
+      console.log('Existing user found:', normalizedEmail);
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Welcome back! Here is your existing key',
+        existing: true,
+        key: existingUser.level1Key
+      }, { status: 200 });
+    }
+
+    // Generate a unique key for new registration
+    console.log('Generating new key...');
+    const newKey = generateUniqueKey(normalizedEmail, normalizedTeam);
+    
+    console.log('Creating new user...');
+    // Create new user with the generated keys
+    const newUser = await Xenith.create({
+      name: normalizedName,
+      email: normalizedEmail,
+      teamName: normalizedTeam,
+      level1Key: newKey,
+      level: 1
+    });
+
+    console.log('User created successfully:', newUser.email);
     return NextResponse.json({ 
       success: true, 
-      message: 'OTP sent to email',
-      existing: !!existing,
-      key: existingKey 
+      message: 'Registration successful',
+      existing: false,
+      key: newKey
     });
 
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Registration failed',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+    }, { status: 500 });
   }
 }

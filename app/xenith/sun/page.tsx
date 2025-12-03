@@ -18,8 +18,7 @@ export default function Level1() {
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [otp] = useState<string[]>(["", "", "", "", "", ""]); // Keep for compatibility with Modal component
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({
     title: "Level 1 Key Generated!",
@@ -35,119 +34,97 @@ export default function Level1() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    // If OTP is entered, verify it
-    if (otpSent) {
-      if (otp.every((digit) => digit)) {
-        await handleOTPVerify(otp);
-      } else if (otp.every((digit) => !digit)) {
-        // If OTP fields are empty, resend OTP
-        await handleSendOTP();
-      } else {
-        setError("Please enter a valid 6-digit OTP");
-      }
+    
+    // Validate form data
+    if (!formData.name || !formData.teamName || !formData.email) {
+      setError("All fields are required");
       return;
     }
-
-    // Otherwise, send OTP
-    await handleSendOTP();
-  };
-
-  const handleOTPVerify = async (otpArray: string[]) => {
-    const otp = otpArray.join("");
-    setVerifyingOTP(true);
-    setError("");
-
-    try {
-      console.log("Verifying OTP...", {
-        email: formData.email,
-        otpLength: otp.length,
-        otpType: typeof otp,
-        otpValue: otp,
-      });
-
-      // Ensure OTP is a string and properly formatted
-      const otpString = otp.toString().trim();
-      if (otpString.length !== 6 || !/^\d{6}$/.test(otpString)) {
-        throw new Error("Please enter a valid 6-digit OTP");
-      }
-
-      const response = await fetch("/api/xenith/level1/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          otp: otpString, // Ensure OTP is sent as a string
-        }),
-      });
-
-      const data = await response.json();
-      console.log("Verification response:", { status: response.status, data });
-
-      if (!response.ok) {
-        throw new Error(data.error || "Verification failed. Please try again.");
-      }
-
-      if (!data.level1Key) {
-        throw new Error("No level key received. Please try again.");
-      }
-
-      console.log("OTP verification successful");
-      setGeneratedKey(data.level1Key);
-      setOtp(["", "", "", "", "", ""]);
-      setOtpSent(false);
-
-      // Set the success message based on whether this is an existing user
-      setSuccessMessage({
-        title: data.existing ? "Welcome Back!" : "Level 1 Key Generated!",
-        subtitle: data.existing
-          ? "Here is your existing key. Keep it safe for the next level."
-          : "Your key has been successfully generated. Keep it safe for the next level.",
-      });
-
-      setShowSuccessModal(true);
-    } catch (err) {
-      console.error("OTP Verification Error:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to verify OTP";
-      setError(errorMessage);
-    } finally {
-      setVerifyingOTP(false);
-    }
-  };
-
-  const handleSendOTP = async () => {
-    // Validate email format
+    
     if (!/^[^@\s]+@iitp\.ac\.in$/i.test(formData.email)) {
       setError("Please use your IITP email address");
       return;
     }
+    
+    // Submit the form directly
+    await handleRegistration();
+  };
 
+  // OTP verification removed as per requirements
+
+  const handleRegistration = async () => {
     setSendingOTP(true);
     setError("");
 
     try {
-      const response = await fetch("/api/xenith/level1/send-otp", {
+      console.log('Sending registration request...');
+      const response = await fetch("/api/xenith/level1/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email }),
+        body: JSON.stringify({
+          name: formData.name,
+          teamName: formData.teamName,
+          email: formData.email
+        }),
       });
 
       const data = await response.json();
+      console.log('Registration response:', data);
 
+      // Handle non-200 responses
       if (!response.ok) {
-        throw new Error(data.error || "Failed to send OTP. Please try again.");
+        // Handle validation errors
+        if (response.status === 400 && data.missingFields) {
+          const missingFields = Object.entries(data.missingFields)
+            .filter(([_, isMissing]) => isMissing)
+            .map(([field]) => field)
+            .join(', ');
+          throw new Error(`Please fill in all required fields: ${missingFields}`);
+        }
+        
+        // Handle other error responses
+        throw new Error(data.error || data.message || "Registration failed. Please try again.");
       }
 
-      setOtpSent(true);
-      setOtp(["", "", "", "", "", ""]); // Reset OTP input
-      setError(""); // Clear any previous errors
+      // Handle successful response
+      if (data.success) {
+        const isExistingUser = data.existing || false;
+        setSuccessMessage({
+          title: isExistingUser ? "Welcome Back!" : "Level 1 Key!",
+          subtitle: isExistingUser
+            ? "Here is your existing key. Keep it safe for the next level."
+            : "Your key has been successfully generated. Keep it safe for the next level.",
+        });
+
+        const userKey = data.key || data.level1Key;
+        if (!userKey) {
+          console.error('No key found in response:', data);
+          throw new Error("Failed to generate key. Please contact support.");
+        }
+
+        setGeneratedKey(userKey);
+        setShowSuccessModal(true);
+        setError("");
+      } else {
+        throw new Error(data.error || "Registration was not successful. Please try again.");
+      }
     } catch (err) {
-      console.error("Error sending OTP:", err);
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to send OTP. Please try again.";
+      console.error("Registration error:", err);
+      
+      // Handle different types of errors
+      let errorMessage = "Registration failed. Please try again.";
+      
+      if (err instanceof Error) {
+        // Handle network errors
+        if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } 
+        // Handle API error responses
+        else if (err.message) {
+          errorMessage = err.message;
+        }
+      }
+      
       setError(errorMessage);
     } finally {
       setSendingOTP(false);
@@ -204,9 +181,9 @@ export default function Level1() {
                   <div className="p-4 bg-white/5 rounded-lg border border-white/5">
                     <p className="text-sm text-slate-200 mb-2">
                       <span className="font-medium text-amber-200">
-                        For OTP
+                        Important
                       </span>{" "}
-                      Check your inbox and spam/junk folder.
+                      Your key will be shown after successful registration.
                     </p>
                     <div className="flex items-start gap-2">
                       <svg
@@ -282,111 +259,33 @@ export default function Level1() {
                   <label className="block text-sm text-slate-200 mb-1">
                     IITP Email
                   </label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={(e) => {
-                        handleChange(e);
-                        setOtpSent(false);
-                      }}
-                      className="flex-1 rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400"
-                      placeholder="name_roll@iitp.ac.in"
-                      pattern="[^@\s]+@iitp\.ac\.in$"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSendOTP}
-                      disabled={sendingOTP}
-                      className="w-full sm:w-auto px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-center"
-                    >
-                      {sendingOTP
-                        ? "Sending..."
-                        : otpSent
-                          ? "Resend OTP"
-                          : "Send OTP"}
-                    </button>
-                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400"
+                    placeholder="name_roll@iitp.ac.in"
+                    pattern="[^@\s]+@iitp\.ac\.in$"
+                    required
+                  />
                   <p className="text-xs text-slate-400 mt-1">
-                    {otpSent
-                      ? "OTP sent! Check your official IITP email."
-                      : "Must be your official IITP email."}
+                    Must be your official IITP email.
                   </p>
                 </div>
-
-                {otpSent && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-slate-200 mb-2 text-center">
-                        Enter the 6-digit code sent to {formData.email}
-                      </label>
-                      <div className="flex justify-center gap-2 mb-4">
-                        {[0, 1, 2, 3, 4, 5].map((index) => (
-                          <input
-                            key={index}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={1}
-                            value={otp[index] || ""}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
-                              if (value || e.target.value === "") {
-                                const newOtp = [...otp];
-                                newOtp[index] = value;
-                                setOtp(newOtp);
-
-                                // Auto-focus next input
-                                if (value && index < 5) {
-                                  const nextInput = document.getElementById(
-                                    `otp-${index + 1}`
-                                  );
-                                  if (nextInput) nextInput.focus();
-                                }
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              // Handle backspace
-                              if (
-                                e.key === "Backspace" &&
-                                !otp[index] &&
-                                index > 0
-                              ) {
-                                const prevInput = document.getElementById(
-                                  `otp-${index - 1}`
-                                ) as HTMLInputElement;
-                                if (prevInput) prevInput.focus();
-                              }
-                            }}
-                            id={`otp-${index}`}
-                            className="w-12 h-14 text-2xl text-center bg-white/5 border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white"
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="text-center mt-2">
-                      <button
-                        type="button"
-                        onClick={handleSendOTP}
-                        disabled={sendingOTP}
-                        className="text-sm text-amber-400 hover:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {sendingOTP ? "Sending new code..." : "Resend code"}
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    disabled={verifyingOTP || (otpSent && otp.some((digit) => !digit))}
-                    className="w-full rounded-xl px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={sendingOTP || !formData.email || !formData.name || !formData.teamName}
+                    className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all flex items-center justify-center gap-2 ${
+                      sendingOTP || !formData.email || !formData.name || !formData.teamName
+                        ? "bg-slate-600 cursor-not-allowed text-slate-400"
+                        : "bg-amber-500 text-white hover:bg-amber-600"
+                    }`}
                   >
-                    {verifyingOTP ? (
-                      <span className="flex items-center justify-center gap-2">
+                    {sendingOTP ? (
+                      <>
                         <svg
                           className="animate-spin h-5 w-5 text-white"
                           xmlns="http://www.w3.org/2000/svg"
@@ -407,9 +306,11 @@ export default function Level1() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        {otpSent ? "Verifying..." : "Submitting..."}
-                      </span>
-                    ) : otpSent ? "Verify & Continue" : "Submit"}
+                        Registering...
+                      </>
+                    ) : (
+                      'Register'
+                    )}
                   </button>
                 </div>
               </form>
