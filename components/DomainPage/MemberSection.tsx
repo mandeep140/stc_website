@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { Github, Linkedin, Mail, UserRound } from "lucide-react";
+import { Github, Linkedin, Mail } from "lucide-react";
 
 interface Member {
   id: string;

@@ -1,11 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Linkedin, Mail, MessageCircle } from "lucide-react";
+import { Linkedin, Mail } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import AppConfig from "@/config/appConfig";
-import domains from "@/DataStore/store";
 
 const coreTeam = [
   {

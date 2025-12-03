@@ -14,7 +14,6 @@ export default function Level3() {
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-  const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [copied, setCopied] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [finalKey, setFinalKey] = useState("");
@@ -79,7 +78,7 @@ export default function Level3() {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  const _handleVerifyOTP = async () => {
     if (!otp.every(digit => digit) || otp.length !== 6) {
       setError("Please enter a valid 6-digit OTP");
       return;
@@ -136,7 +135,6 @@ export default function Level3() {
 };
 
   const handleOTPVerify = async (otpValue: string | string[]) => {
-    setVerifyingOTP(true);
     setError("");
     try {
       // Handle both string and array OTP values
@@ -167,8 +165,6 @@ export default function Level3() {
       const errorMessage =
         err instanceof Error ? err.message : "Verification failed";
       setError(errorMessage);
-    } finally {
-      setVerifyingOTP(false);
     }
   };
 
@@ -281,11 +277,13 @@ export default function Level3() {
               <img
                 src="/images/stc-logo.jpg"
                 className="w-12 h-12 rounded-full"
+                alt="STC Logo"
               />
               <div className="h-8 w-px bg-white/20"></div>
               <img
                 src="/xenith/logo.png"
                 className="w-12 h-12 object-contain"
+                alt="Xenith Logo"
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">

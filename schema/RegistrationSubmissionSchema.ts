@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IRegistrationSubmission extends Document {
   registrationTemplateId: mongoose.Types.ObjectId;
   registrationSlug: string;
-  data: { [key: string]: any };
+  data: { [key: string]: unknown };
   submittedAt: Date;
   metadata: {
     emailVerified: boolean;

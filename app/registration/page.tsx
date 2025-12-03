@@ -20,7 +20,7 @@ interface RegistrationForm {
   slug: string;
   description: string;
   image?: string;
-  fields: any[];
+  fields: { key: string; type: string }[];
   active: boolean;
   createdAt: string;
 }
@@ -32,7 +32,7 @@ export default function RegistrationsPage() {
 
   useEffect(() => {
     fetchRegistrations();
-  }, []);
+  },);
 
   const fetchRegistrations = async () => {
     try {

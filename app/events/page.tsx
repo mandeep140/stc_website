@@ -8,7 +8,6 @@ import {
   Trophy,
   Clock,
   Target,
-  ArrowUpRight,
   CalendarCheck,
   Download,
 } from "lucide-react";
@@ -36,6 +35,8 @@ interface Event {
   _expireDate?: Date;
   _isRegistrationOpen?: boolean;
   _isEventEnded?: boolean;
+  _hasRegistration?: boolean;
+  _isRegistrationUpcoming?: boolean;
 }
 
 const hackathonWinners = [
@@ -216,7 +217,7 @@ export default function EventsPage() {
           };
         });
 
-        const getEventPriority = (event: any) => {
+        const getEventPriority = (event: Event) => {
           if (event._isEventEnded) return 4; // Past events last
           if (!event._hasRegistration) return 3; // Events without registration
           if (event._isRegistrationOpen) return 1; // Registration live
@@ -224,7 +225,7 @@ export default function EventsPage() {
           return 2; // Registration ended but event not completed
         };
 
-        const sortedEvents = processedEvents.sort((a: any, b: any) => {
+        const sortedEvents = processedEvents.sort((a: Event, b: Event) => {
           const aPriority = getEventPriority(a);
           const bPriority = getEventPriority(b);
 
@@ -233,9 +234,9 @@ export default function EventsPage() {
           }
 
           if (aPriority === 4) {
-            return b._eventDate.getTime() - a._eventDate.getTime();
+            return (b._eventDate?.getTime() || 0) - (a._eventDate?.getTime() || 0);
           }
-          return a._eventDate.getTime() - b._eventDate.getTime();
+          return (a._eventDate?.getTime() || 0) - (b._eventDate?.getTime() || 0);
         });
 
         setUpcomingEvents(sortedEvents);

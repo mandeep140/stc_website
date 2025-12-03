@@ -334,7 +334,7 @@ export default function ResultsPage() {
 
                     <CardContent className="p-4 sm:p-6">
                       <div className="space-y-3 sm:space-y-4">
-                        {sortedResults.map((result, index) => {
+                        {sortedResults.map((result) => {
                           const badge = getRankBadge(result.rank);
                           return (
                             <div

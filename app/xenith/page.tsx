@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import XenithNav from "@/components/XenithNav";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Inter, Poppins } from "next/font/google";
 import Confetti from "react-confetti";
 
@@ -323,7 +323,7 @@ const Page = () => {
           };
         });
 
-        const getEventPriority = (event: any) => {
+        const getEventPriority = (event: Event) => {
           if (event._isEventEnded) return 4; // Past events last
           if (!event._hasRegistration) return 3; // Events without registration
           if (event._isRegistrationOpen) return 1; // Registration live
@@ -331,7 +331,7 @@ const Page = () => {
           return 2; // Registration ended but event not completed
         };
 
-        const sortedEvents = processedEvents.sort((a: any, b: any) => {
+        const sortedEvents = processedEvents.sort((a: Event, b: Event) => {
           const aPriority = getEventPriority(a);
           const bPriority = getEventPriority(b);
 
@@ -343,10 +343,10 @@ const Page = () => {
           // Same priority level, sort by date
           if (aPriority === 4) {
             // For past events, newest first
-            return b._eventDate.getTime() - a._eventDate.getTime();
+            return (b._eventDate?.getTime() || 0) - (a._eventDate?.getTime() || 0);
           }
           // For all other cases, soonest first
-          return a._eventDate.getTime() - b._eventDate.getTime();
+          return (a._eventDate?.getTime() || 0) - (b._eventDate?.getTime() || 0);
         });
 
         setEvents(sortedEvents);

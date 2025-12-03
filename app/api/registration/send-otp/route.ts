@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Registration form not found' }, { status: 404 });
     }
 
-    const emailField = template.fields.find((f: any) => f.type === 'email');
+    const emailField = template.fields.find((f: { type: string; emailRestriction?: string }) => f.type === 'email');
     
     if (!emailField) {
       return NextResponse.json({ error: 'This form does not require email verification' }, { status: 400 });

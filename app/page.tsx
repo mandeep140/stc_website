@@ -1,5 +1,4 @@
 import { HeroSection } from "@/components/hero-section"
-import { NoticesSection } from "@/components/notices-section"
 import StatsSection from "@/components/stats-section"
 import WingsSection from "@/components/WingsSection"
 import CoreValues from "@/components/coreValues"

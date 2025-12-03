@@ -30,7 +30,7 @@ import {
 interface Submission {
   _id: string;
   registrationSlug: string;
-  data: { [key: string]: any };
+  data: { [key: string]: unknown };
   submittedAt: string;
   metadata: {
     emailVerified: boolean;
@@ -238,9 +238,9 @@ export default function RegistrationSubmissionsViewer() {
                       <TableCell className="font-medium">
                         {submission.registrationSlug}
                       </TableCell>
-                      <TableCell>{submission.data.name || "-"}</TableCell>
-                      <TableCell>{submission.data.email || "-"}</TableCell>
-                      <TableCell>{submission.data.phone || "-"}</TableCell>
+                      <TableCell>{String(submission.data.name ?? "-")}</TableCell>
+                      <TableCell>{String(submission.data.email ?? "-")}</TableCell>
+                      <TableCell>{String(submission.data.phone ?? "-")}</TableCell>
                       <TableCell>
                         {toIndianDateString(submission.submittedAt)}
                       </TableCell>

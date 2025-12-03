@@ -20,7 +20,7 @@ export interface IField {
   conditional?: {
     fieldKey: string;
     operator: '==' | '!=' | 'in' | 'notin' | '>' | '<';
-    value: any;
+    value: unknown;
   };
   // For email field
   emailRestriction?: 'all' | 'iitp'; // 'all' = all emails, 'iitp' = only @iitp.ac.in

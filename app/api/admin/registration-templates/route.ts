@@ -5,8 +5,6 @@ import RegistrationTemplate from '@/schema/RegistrationTemplateSchema';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    await connectDB();
     
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -40,7 +38,7 @@ export async function POST(request: NextRequest) {
     
     // Validate mandatory fields exist
     const mandatoryFields = ['name', 'email', 'phone', 'semester'];
-    const fieldKeys = body.fields?.map((f: any) => f.key) || [];
+    const fieldKeys = body.fields?.map((f: { key: string }) => f.key) || [];
     const missingFields = mandatoryFields.filter(field => !fieldKeys.includes(field));
     
     if (missingFields.length > 0) {
@@ -81,7 +79,7 @@ export async function PUT(request: NextRequest) {
     // Validate mandatory fields exist
     if (updateData.fields) {
       const mandatoryFields = ['name', 'email', 'phone', 'semester'];
-      const fieldKeys = updateData.fields.map((f: any) => f.key);
+      const fieldKeys = updateData.fields.map((f: { key: string }) => f.key);
       const missingFields = mandatoryFields.filter(field => !fieldKeys.includes(field));
       
       if (missingFields.length > 0) {

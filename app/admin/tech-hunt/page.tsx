@@ -20,14 +20,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Search,
-  Trophy,
   Loader2,
   User,
   Key,
-  Award,
   Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -73,7 +71,7 @@ export default function AdminTechHuntPage() {
 
   useEffect(() => {
     fetchResults();
-  }, []);
+  },);
 
   const fetchResults = async () => {
     try {

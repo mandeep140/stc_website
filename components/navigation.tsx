@@ -10,7 +10,6 @@ import { Menu, X, Download } from "lucide-react";
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [dropdownTimeout, setDropdownTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -91,7 +90,6 @@ export function Navigation() {
   })();
 
   useEffect(() => {
-    setIsMounted(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -123,24 +121,26 @@ export function Navigation() {
     document.body.removeChild(link);
   };
 
-  const handleNoticesClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (typeof window !== "undefined") {
-      const noticesSection = document.getElementById("notices-section");
-      if (noticesSection) {
-        noticesSection.scrollIntoView({ behavior: "smooth" });
-      } else {
-        // If not on home page, navigate to home page with hash
-        window.location.href = "/#notices";
-      }
-    }
-    setIsOpen(false);
-  };
+  // Unused function - kept for future implementation
+  // const handleNoticesClick = (e: React.MouseEvent) => {
+  //   e.preventDefault();
+  //   if (typeof window !== "undefined") {
+  //     const noticesSection = document.getElementById("notices-section");
+  //     if (noticesSection) {
+  //       noticesSection.scrollIntoView({ behavior: "smooth" });
+  //     } else {
+  //       // If not on home page, navigate to home page with hash
+  //       window.location.href = "/#notices";
+  //     }
+  //   }
+  //   setIsOpen(false);
+  // };
 
-  const isNoticesActive = () => {
-    if (!isMounted || typeof window === "undefined") return false;
-    return pathname === "/" && window.location.hash === "#notices";
-  };
+  // Unused function - kept for future implementation  
+  // const isNoticesActive = () => {
+  //   if (!isMounted || typeof window === "undefined") return false;
+  //   return pathname === "/" && window.location.hash === "#notices";
+  // };
 
   const isAdmin = pathname?.startsWith("/admin");
   const xenith = pathname?.startsWith("/xenith");

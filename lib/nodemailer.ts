@@ -24,15 +24,15 @@ const transporter: Transporter = nodemailer.createTransport({
 const verifyTransporter = async (): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     // Use the callback-based verify method which is available on the SMTP transport
-    (transporter as any).verify((error: Error | null) => {
-  if (error) {
-    console.error('❌ Error with email configuration:', error);
-    reject(new Error(`Failed to verify email configuration: ${error.message}`));
-  } else {
-    console.log('✅ Email server is ready to send messages');
-    resolve(true);
-  }
-});
+    transporter.verify((error: Error | null) => {
+      if (error) {
+        console.error('❌ Error with email configuration:', error);
+        reject(new Error(`Failed to verify email configuration: ${error.message}`));
+      } else {
+        console.log('✅ Email server is ready to send messages');
+        resolve(true);
+      }
+    });
   });
 };
 
@@ -177,7 +177,7 @@ This is an official automated email. Please do not reply.
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', info.messageId);
+    console.log('Email sent successfully:', (info as { messageId: string }).messageId);
     return info;
   } catch (error) {
     console.error('Error sending email:', error);
@@ -343,7 +343,7 @@ This is an official confirmation email. Please do not reply.
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Confirmation email sent successfully:', info.messageId);
+    console.log('Confirmation email sent successfully:', (info as { messageId: string }).messageId);
     return info;
   } catch (error) {
     console.error('Error sending confirmation email:', error);
@@ -464,7 +464,7 @@ This is an official automated email. Please do not reply.
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Xenith OTP email sent:', info.messageId);
+    console.log('Xenith OTP email sent:', (info as { messageId: string }).messageId);
     return info;
   } catch (error) {
     console.error('Error sending Xenith OTP email:', error);

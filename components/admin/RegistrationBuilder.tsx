@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided } from '@hello-pangea/dnd';
-import { Loader2, Plus, Edit, Trash2, GripVertical, Eye, Save, Upload, X } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, GripVertical, Eye, Save, X } from 'lucide-react';
 
 interface FieldOption {
   label: string;
@@ -37,7 +37,7 @@ interface Field {
   conditional?: {
     fieldKey: string;
     operator: string;
-    value: any;
+    value: unknown;
   };
   emailRestriction?: 'all' | 'iitp';
   imageFolder?: string;
@@ -326,7 +326,7 @@ export default function RegistrationBuilder() {
     });
   };
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: { destination?: { index: number } | null; source: { index: number } }) => {
     if (!result.destination || !currentTemplate) return;
 
     const items = Array.from(currentTemplate.fields);
@@ -841,7 +841,7 @@ export default function RegistrationBuilder() {
                           conditional: { fieldKey: '', operator: '==', value: '' }
                         });
                       } else {
-                        const { conditional, ...rest } = editingField;
+                        const { conditional: _conditional, ...rest } = editingField;
                         setEditingField(rest);
                       }
                     }}
@@ -903,7 +903,7 @@ export default function RegistrationBuilder() {
                       <div>
                         <Label>Value</Label>
                         <Input
-                          value={editingField.conditional.value}
+                          value={String(editingField.conditional.value ?? '')}
                           onChange={(e) => setEditingField({
                             ...editingField,
                             conditional: { ...editingField.conditional!, value: e.target.value }

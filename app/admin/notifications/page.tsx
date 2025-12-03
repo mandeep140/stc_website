@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Plus, Trash2, Edit, Bell, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit, Bell, Loader2 } from "lucide-react";
 import { uploadToImageKit, deleteFromImageKit } from "@/lib/imagekit";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -43,8 +43,7 @@ export default function AdminNotificationsPage() {
     useState<Notification | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [redirectLink, setRedirectLink] = useState<string>("");
-  const [redirectLabel, setRedirectLabel] = useState<string>("");
+ 
   const [imagePreview, setImagePreview] = useState<string>("");
   const { toast } = useToast();
 
@@ -62,7 +61,7 @@ export default function AdminNotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  },);
 
   const fetchNotifications = async () => {
     try {

@@ -1,24 +1,20 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import Modal from "../../../components/xenith/Modal";
 
 export default function Level2() {
   const [level1Key, setLevel1Key] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [verifyEmail, setVerifyEmail] = useState("");
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-  const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [level2Key, setLevel2Key] = useState("");
   const [copied, setCopied] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const router = useRouter();
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -62,7 +58,6 @@ export default function Level2() {
       }
 
       setEmail(data.email);
-      setOtpModalOpen(true);
       setOtpSent(true);
       setLoading(false);
     } catch (err) {
@@ -73,7 +68,7 @@ export default function Level2() {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  const _handleVerifyOTP = async () => {
     if (otp.some(digit => !digit)) {
       setError("Please enter a valid 6-digit OTP");
       return;
@@ -120,7 +115,6 @@ export default function Level2() {
   };
 
   const handleOTPVerify = async (otpValue: string) => {
-    setVerifyingOTP(true);
     setError("");
     try {
       const response = await fetch('/api/xenith/level2/confirm', {
@@ -137,15 +131,12 @@ export default function Level2() {
 
       // Store the key and show success modal
       setLevel2Key(data.level2Key);
-      setOtpModalOpen(false); // Close the OTP modal
       setOtp(['', '', '', '', '', '']); // Reset OTP input
       setCompleted(true); // Show success screen
     } catch (err) {
       console.error('Error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Verification failed';
       setError(errorMessage);
-    } finally {
-      setVerifyingOTP(false);
     }
   };
 
@@ -164,9 +155,9 @@ export default function Level2() {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <img src="/images/stc-logo.jpg" className="w-12 h-12 rounded-full" />
+              <img src="/images/stc-logo.jpg" className="w-12 h-12 rounded-full" alt="STC Logo" />
               <div className="h-8 w-px bg-white/20"></div>
-              <img src="/xenith/logo.png" className="w-12 h-12 object-contain" />
+              <img src="/xenith/logo.png" className="w-12 h-12 object-contain" alt="Xenith Logo" />
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">
               Treasure Hunt
@@ -317,7 +308,7 @@ export default function Level2() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    disabled={loading || verifyingOTP || (otpSent && otp.some(digit => !digit))}
+                    disabled={loading || (otpSent && otp.some(digit => !digit))}
                     onClick={async (e) => {
                       if (otpSent) {
                         if (otp.every(digit => !digit)) {
@@ -334,15 +325,7 @@ export default function Level2() {
                     }}
                     className="w-full rounded-xl px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow hover:scale-[1.01] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {verifyingOTP ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Verifying...
-                      </span>
-                    ) : 'Verify & Continue'}
+                    Verify & Continue
                   </button>
                 </div>
 

@@ -17,12 +17,10 @@ const About: React.FC<AboutProps> = ({
   title,
   about,
   message,
-  fromColor,
-  toColor,
-  to,
+  fromColor: _fromColor,
+  toColor: _toColor,
+  to: _to,
 }) => {
-  const gradient = `linear-gradient(135deg, ${fromColor} 0%, ${toColor} 100%)`;
-  
   return (
     <Box
       component="section"

@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { redirect } from "next/dist/server/api-utils";
 
 const NotificationsSchema = new Schema({
   title: { type: String, required: true },

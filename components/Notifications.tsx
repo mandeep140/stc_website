@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Clock, AlertCircle, Loader2, ExternalLink } from "lucide-react";
+import { Bell, Clock, AlertCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { toIndianDateString, toIndianDateTimeString } from "@/lib/formatDate";
+import { toIndianDateString } from "@/lib/formatDate";
 
 interface Notification {
   _id: string;

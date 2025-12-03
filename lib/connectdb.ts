@@ -1,4 +1,4 @@
-const isEdgeRuntime = typeof (globalThis as any).EdgeRuntime !== 'undefined'
+const isEdgeRuntime = typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime !== 'undefined'
 
 let isConnected = false
 

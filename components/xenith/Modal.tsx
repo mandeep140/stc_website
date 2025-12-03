@@ -21,8 +21,6 @@ export default function Modal({
   onClose: () => void;
   level?: number;
 }) {
-  if (!open) return null;
-
   const [copied, setCopied] = useState(false);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -49,6 +47,8 @@ export default function Modal({
       }
     };
   }, []);
+
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">

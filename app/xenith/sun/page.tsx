@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import Modal from "@/components/xenith/Modal";
 
 interface FormData {
@@ -10,7 +9,6 @@ interface FormData {
 }
 
 export default function Level1() {
-  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     name: "",
     teamName: "",
@@ -174,11 +172,13 @@ export default function Level1() {
               <img
                 src="/images/stc-logo.jpg"
                 className="w-12 h-12 rounded-full"
+                alt="STC Logo"
               />
               <div className="h-8 w-px bg-white/20"></div>
               <img
                 src="/xenith/logo.png"
                 className="w-12 h-12 object-contain"
+                alt="Xenith Logo"
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">

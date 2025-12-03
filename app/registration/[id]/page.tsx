@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Loader2, Calendar, Users, ArrowLeft, FileText } from "lucide-react";
+import { Loader2, Calendar, ArrowLeft, FileText } from "lucide-react";
 import { toIndianDateString } from "@/lib/formatDate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,7 +16,7 @@ interface RegistrationTemplate {
   slug: string;
   description: string;
   image?: string;
-  fields: any[];
+  fields: { key: string; type: string; label: string }[];
   active: boolean;
   emailRestriction: "all" | "iitp";
   createdAt: string;
@@ -24,7 +24,6 @@ interface RegistrationTemplate {
 
 export default function RegistrationFormPage() {
   const params = useParams();
-  const router = useRouter();
   const slug = params.id as string;
 
   const [template, setTemplate] = useState<RegistrationTemplate | null>(null);

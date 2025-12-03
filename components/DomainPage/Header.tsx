@@ -1,15 +1,12 @@
 "use client";
-import AppConfig from "@/config/appConfig";
 import { Box, Typography } from "@mui/material";
 import Image from "next/image";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { CardBody, CardContainer, CardItem } from "@//components/ui/3d-card";
-import React, { use } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { Cover } from "@//components/ui/cover";
-import { cn } from "@/lib/utils";
 import { Spotlight } from "@//components/ui/Spotlight";
-import { ArrowRight, MoveUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface ClubStats {
   activeMembers: number;
@@ -29,7 +26,7 @@ type HeaderProps = {
   toColor: string;
   to: {
     whatsappLink: string;
-    [key: string]: any; // Allow other properties as well
+    [key: string]: string | undefined; // Allow other properties as well
   };
   prvDomain: string;
   nextDomain: string;
@@ -39,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({
   title,
   subtitle,
   imageUrl,
-  stats,
+  stats: _stats,
   fromColor,
   toColor,
   to,

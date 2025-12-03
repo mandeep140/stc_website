@@ -42,7 +42,7 @@ export default function AdminCompetitionsPage() {
 
   useEffect(() => {
     fetchResults()
-  }, [])
+  },)
 
   const fetchResults = async () => {
     try {

@@ -8,10 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { uploadToImageKit } from '@/lib/imagekit';
 import Link from 'next/link';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface FieldOption {
   label: string;
@@ -38,7 +37,7 @@ interface Field {
   conditional?: {
     fieldKey: string;
     operator: string;
-    value: any;
+    value: unknown;
   };
   emailRestriction?: 'all' | 'iitp';
   imageFolder?: string;
@@ -61,14 +60,12 @@ interface DynamicRegistrationFormProps {
 
 export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFormProps) {
   const [template, setTemplate] = useState<Template | null>(null);
-  const [formData, setFormData] = useState<{ [key: string]: any }>({});
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [uploadingImages, setUploadingImages] = useState<{ [key: string]: boolean }>({});
-
-  const [emailField, setEmailField] = useState<Field | null>(null);
 
   // Password protection states
   const [formPassword, setFormPassword] = useState('');
@@ -85,7 +82,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
         const data = await response.json();
         setTemplate(data);
 
-        const initialData: { [key: string]: any } = {};
+        const initialData: Record<string, unknown> = {};
         data.fields.forEach((field: Field) => {
           if (field.type === 'checkbox') {
             initialData[field.key] = [];
@@ -96,8 +93,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
         setFormData(initialData);
 
         // Find email field
-        const emailFld = data.fields.find((f: Field) => f.type === 'email');
-        setEmailField(emailFld || null);
+        const _emailFld = data.fields.find((f: Field) => f.type === 'email');
       }
     } catch (error) {
       console.error('Error fetching template:', error);
@@ -193,7 +189,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
       const teamSize = formData['hackathon-team-field'];
 
       // Only show member fields up to the selected team size
-      if (!teamSize || memberNumber > parseInt(teamSize)) {
+      if (!teamSize || memberNumber > parseInt(String(teamSize))) {
         return false;
       }
     }
@@ -235,7 +231,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
     }
   };
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: unknown) => {
     setFormData({ ...formData, [key]: value });
     if (errors[key]) {
       setErrors({ ...errors, [key]: '' });
@@ -243,7 +239,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
   };
 
   const handleCheckboxChange = (key: string, value: string, checked: boolean) => {
-    const currentValues = formData[key] || [];
+    const currentValues = (formData[key] as string[]) || [];
     const newValues = checked
       ? [...currentValues, value]
       : currentValues.filter((v: string) => v !== value);
@@ -288,22 +284,23 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
 
       // Validate email domain restriction
       if (field.type === 'email' && field.emailRestriction === 'iitp' && value) {
-        if (!value.toLowerCase().endsWith('@iitp.ac.in')) {
+        if (!String(value).toLowerCase().endsWith('@iitp.ac.in')) {
           newErrors[field.key] = 'Only @iitp.ac.in email addresses are allowed';
           return;
         }
       }
 
       if (value && field.validation) {
-        if (field.validation.minLength && value.length < field.validation.minLength) {
+        const valueStr = String(value);
+        if (field.validation.minLength && valueStr.length < field.validation.minLength) {
           newErrors[field.key] = field.validation.customMessage || `Minimum length is ${field.validation.minLength}`;
         }
-        if (field.validation.maxLength && value.length > field.validation.maxLength) {
+        if (field.validation.maxLength && valueStr.length > field.validation.maxLength) {
           newErrors[field.key] = field.validation.customMessage || `Maximum length is ${field.validation.maxLength}`;
         }
         if (field.validation.pattern) {
           const regex = new RegExp(field.validation.pattern);
-          if (!regex.test(value)) {
+          if (!regex.test(String(value))) {
             newErrors[field.key] = field.validation.customMessage || 'Invalid format';
           }
         }
@@ -409,9 +406,9 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
                 Uploading...
               </div>
             )}
-            {formData[field.key] && !uploadingImages[field.key] && (
+            {Boolean(formData[field.key]) && !uploadingImages[field.key] && (
               <div className="mt-2">
-                <img src={formData[field.key]} alt="Preview" className="max-w-xs rounded border" />
+                <img src={String(formData[field.key])} alt="Preview" className="max-w-xs rounded border" />
               </div>
             )}
             <p className="text-xs text-gray-500">Max file size: {field.maxFileSize || 5} MB</p>
@@ -422,7 +419,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
         {field.type !== 'email' && field.type !== 'image' && field.type === 'textarea' && (
           <Textarea
             {...commonProps}
-            value={formData[field.key] || ''}
+            value={String(formData[field.key] ?? '')}
             onChange={(e) => handleChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             className={errors[field.key] ? 'border-red-500' : ''}
@@ -431,7 +428,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
 
         {field.type === 'select' && (
           <Select
-            value={formData[field.key] || ''}
+            value={String(formData[field.key] ?? '')}
             onValueChange={(value) => handleChange(field.key, value)}
             disabled={submitting}
           >
@@ -450,7 +447,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
 
         {field.type === 'radio' && (
           <RadioGroup
-            value={formData[field.key] || ''}
+            value={String(formData[field.key] ?? '')}
             onValueChange={(value) => handleChange(field.key, value)}
             disabled={submitting}
           >
@@ -469,7 +466,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
               <div key={option.value} className="flex items-center space-x-2">
                 <Checkbox
                   id={`${field.key}-${option.value}`}
-                  checked={(formData[field.key] || []).includes(option.value)}
+                  checked={((formData[field.key] as string[]) || []).includes(option.value)}
                   onCheckedChange={(checked) => handleCheckboxChange(field.key, option.value, checked as boolean)}
                   disabled={submitting}
                 />
@@ -484,7 +481,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
             <Input
               {...commonProps}
               type="email"
-              value={formData[field.key] || ''}
+              value={String(formData[field.key] ?? '')}
               onChange={(e) => handleChange(field.key, e.target.value)}
               placeholder={field.placeholder}
               className={errors[field.key] ? 'border-red-500' : ''}
@@ -499,7 +496,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
           <Input
             {...commonProps}
             type={field.type}
-            value={formData[field.key] || ''}
+            value={String(formData[field.key] ?? '')}
             onChange={(e) => handleChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             className={errors[field.key] ? 'border-red-500' : ''}
@@ -581,7 +578,7 @@ export default function DynamicRegistrationForm({ slug }: DynamicRegistrationFor
           <form onSubmit={handleSubmit} className="space-y-6">
             {(() => {
               const sortedFields = [...template.fields].sort((a, b) => a.order - b.order);
-              const teamSize = formData['hackathon-team-field'] ? parseInt(formData['hackathon-team-field']) : 0;
+              const teamSize = formData['hackathon-team-field'] ? parseInt(String(formData['hackathon-team-field'])) : 0;
               const renderedFields: React.ReactNode[] = [];
 
               // Group fields by member number

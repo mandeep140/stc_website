@@ -22,13 +22,11 @@ import {
   Calendar,
   Upload,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 import { uploadToImageKit, deleteFromImageKit } from "@/lib/imagekit";
 import Image from "next/image";
 import { toIndianDateString } from "@/lib/formatDate";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 
 interface Event {
   _id: string;
@@ -76,7 +74,7 @@ export default function AdminEventsPage() {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  },);
 
   const fetchEvents = async () => {
     try {

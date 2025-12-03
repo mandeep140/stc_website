@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const registrationSlug = searchParams.get('registrationSlug');
     const status = searchParams.get('status');
 
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     if (registrationSlug) query.registrationSlug = registrationSlug;
     if (status) query.status = status;
 

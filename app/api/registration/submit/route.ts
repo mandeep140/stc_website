@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const errors: { [key: string]: string } = {};
     
-    template.fields.forEach((field: any) => {
+    template.fields.forEach((field: { key: string; label: string; type: string; required?: boolean; validation?: { minLength?: number; maxLength?: number; min?: number; max?: number; pattern?: string; customMessage?: string }; emailRestriction?: string }) => {
       const value = data[field.key];
       
       if (field.required && (!value || (Array.isArray(value) && value.length === 0))) {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate submission (same email, same form)
-    const emailField = template.fields.find((f: any) => f.type === 'email');
+    const emailField = template.fields.find((f: { type: string; key: string }) => f.type === 'email');
     if (emailField && data[emailField.key]) {
       const existingSubmission = await RegistrationSubmission.findOne({
         registrationSlug,
