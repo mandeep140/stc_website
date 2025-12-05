@@ -29,31 +29,31 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    // Check if user already has a level2Key
+    // Check if user already has a MoonKey
     const existingUser = await Xenith.findOne({ email });
-    let level2Key;
+    let MoonKey;
 
-    if (existingUser?.level2Key) {
+    if (existingUser?.MoonKey) {
       // Use existing key
-      level2Key = existingUser.level2Key;
-      console.log("Using existing level 2 key:", level2Key);
+      MoonKey = existingUser.MoonKey;
+      console.log("Using existing level 2 key:", MoonKey);
     } else {
       // Generate new key
-      level2Key = generateLevelKey(2);
-      console.log("Generated new level 2 key:", level2Key);
+      MoonKey = generateLevelKey(2);
+      console.log("Generated new level 2 key:", MoonKey);
     }
 
     const updated = await Xenith.findOneAndUpdate(
       { email },
       {
-        level2Key,
-        "verifiedAt.level2": new Date(),
+        MoonKey,
+        "verifiedAt.Moon": new Date(),
       },
       { new: true }
     );
 
     if (!updated) {
-      console.error("Failed to update user with level2Key");
+      console.error("Failed to update user with MoonKey");
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
     console.log("User updated successfully:", updated);
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      level2Key,
+      MoonKey,
       message: "Level 2 key generated successfully!",
     });
   } catch (error) {

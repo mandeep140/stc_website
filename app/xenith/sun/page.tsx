@@ -8,7 +8,7 @@ interface FormData {
   email: string;
 }
 
-export default function Level1() {
+export default function Sun() {
   const [formData, setFormData] = useState<FormData>({
     name: "",
     teamName: "",
@@ -58,7 +58,7 @@ export default function Level1() {
 
     try {
       console.log('Sending registration request...');
-      const response = await fetch("/api/xenith/level1/register", {
+      const response = await fetch("/api/xenith/Sun/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,7 +96,7 @@ export default function Level1() {
             : "Your key has been successfully generated. Keep it safe for the next level.",
         });
 
-        const userKey = data.key || data.level1Key;
+        const userKey = data.key || data.SunKey;
         if (!userKey) {
           console.error('No key found in response:', data);
           throw new Error("Failed to generate key. Please contact support.");

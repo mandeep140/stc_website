@@ -3,15 +3,15 @@ import React, { useState } from "react";
 import Modal from "@/components/xenith/Modal";
 
 interface FormData {
-  level1Key: string;
+  SunKey: string;
   email: string;
   name: string;
   teamName: string;
 }
 
-export default function Level2() {
+export default function Moon() {
   const [formData, setFormData] = useState<FormData>({
-    level1Key: "",
+    SunKey: "",
     name: "",
     teamName: "",
     email: "",
@@ -38,7 +38,7 @@ export default function Level2() {
     e.preventDefault();
     setError("");
     
-    if (!formData.level1Key || !formData.name || !formData.teamName || !formData.email) {
+    if (!formData.SunKey || !formData.name || !formData.teamName || !formData.email) {
       setError("All fields are required");
       return;
     }
@@ -51,7 +51,7 @@ export default function Level2() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/xenith/level2/verify', {
+      const response = await fetch('/api/xenith/Moon/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -132,8 +132,8 @@ export default function Level2() {
                   </label>
                   <input
                     type="text"
-                    name="level1Key"
-                    value={formData.level1Key}
+                    name="SunKey"
+                    value={formData.SunKey}
                     onChange={handleChange}
                     className="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/6 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                     required

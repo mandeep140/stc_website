@@ -7,13 +7,11 @@ interface IXenith extends Document {
   email: string;
   name: string;
   teamName: string;
-  level1Key?: string;
-  level2Key?: string;
-  level3Key?: string;
+  SunKey?: string;
+  MoonKey?: string;
   verifiedAt: {
-    level1?: Date;
-    level2?: Date;
-    level3?: Date;
+    Sun?: Date;
+    Moon?: Date;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -83,15 +81,15 @@ export async function POST(req: Request) {
 
     // Check if email already exists
     console.log('Checking for existing user...');
-    const existingUser = await Xenith.findOne<IXenith>({ email: normalizedEmail }).select('level1Key').lean();
+    const existingUser = await Xenith.findOne<IXenith>({ email: normalizedEmail }).select('SunKey').lean();
     
-    if (existingUser && existingUser.level1Key) {
+    if (existingUser && existingUser.SunKey) {
       console.log('Existing user found:', normalizedEmail);
       return NextResponse.json({ 
         success: true, 
         message: 'Welcome back! Here is your existing key',
         existing: true,
-        key: existingUser.level1Key
+        key: existingUser.SunKey
       }, { status: 200 });
     }
 
@@ -105,7 +103,7 @@ export async function POST(req: Request) {
       name: normalizedName,
       email: normalizedEmail,
       teamName: normalizedTeam,
-      level1Key: newKey,
+      SunKey: newKey,
       level: 1
     });
 

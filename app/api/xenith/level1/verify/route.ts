@@ -61,23 +61,23 @@ export async function POST(req: Request) {
 
     // Check if user already exists
     let user = await Xenith.findOne({ email: normalizedEmail });
-    let level1Key: string;
+    let SunKey: string;
 
     if (user) {
       // User exists, use existing key
-      level1Key = user.level1Key;
-      console.log('Existing user found, using existing key:', level1Key);
+      SunKey = user.SunKey;
+      console.log('Existing user found, using existing key:', SunKey);
     } else {
       // New user, generate and save new key
-      level1Key = generateLevelKey(1);
-      console.log('New user, generating key:', level1Key);
+      SunKey = generateLevelKey(1);
+      console.log('New user, generating key:', SunKey);
       
       user = await Xenith.create({
         teamName: normalizedTeam,
         email: normalizedEmail,
         name: normalizedName,
-        level1Key,
-        verifiedAt: { level1: new Date() }
+        SunKey,
+        verifiedAt: { Sun: new Date() }
       });
     }
 
@@ -87,9 +87,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      level1Key,
-      existing: !!user.level1Key, // Indicate if this is an existing user
-      message: user.level1Key ? 'Welcome back! Here is your key.' : 'Registration successful! Save your key for future levels.'
+      SunKey,
+      existing: !!user.SunKey, // Indicate if this is an existing user
+      message: user.SunKey ? 'Welcome back! Here is your key.' : 'Registration successful! Save your key for future levels.'
     });
 
   } catch (error) {

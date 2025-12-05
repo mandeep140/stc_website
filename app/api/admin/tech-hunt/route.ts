@@ -9,13 +9,11 @@ interface ITechHuntUser {
   name: string;
   email: string;
   teamName: string;
-  level1Key: string;
-  level2Key?: string;
-  level3Key?: string;
+  SunKey: string;
+  MoonKey?: string;
   verifiedAt: {
-    level1?: string;
-    level2?: string;
-    level3?: string;
+    Sun?: string;
+    Moon?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -32,13 +30,11 @@ const Xenith =
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         teamName: { type: String, required: true },
-        level1Key: { type: String, required: true },
-        level2Key: { type: String },
-        level3Key: { type: String },
+        SunKey: { type: String, required: true },
+        MoonKey: { type: String },
         verifiedAt: {
-          level1: { type: Date },
-          level2: { type: Date },
-          level3: { type: Date },
+          Sun: { type: Date },
+          Moon: { type: Date }
         },
       },
       { timestamps: true }
@@ -93,35 +89,32 @@ export async function GET() {
 
     // Get all users from the Xenith collection
     const users = await Xenith.find({})
-      .select("name email teamName level1Key level2Key level3Key verifiedAt createdAt")
+      .select("name email teamName SunKey MoonKey verifiedAt createdAt")
       .lean<ITechHuntUser[]>();
 
     console.log("Users from DB:", users);
 
     // Transform the data to match the expected format
     const results = users.map((user) => {
-  // Determine the highest level completed
-  let level = 1;
-  if (user.verifiedAt?.level3) level = 3;
-  else if (user.verifiedAt?.level2) level = 2;
+      // Determine the highest level completed
+      let level = 1;
+      if (user.verifiedAt?.Moon) level = 2;
 
-  return {
-    _id: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    teamName: user.teamName,
-    // Include all level keys
-    level1Key: user.level1Key,
-    level2Key: user.level2Key,
-    level3Key: user.level3Key,
-    // Set the key based on the user's level
-    key: user[`level${level}Key`] || user.level1Key,
-    level: level,
-    level1Time: user.verifiedAt?.level1,
-    level2Time: user.verifiedAt?.level2,
-    level3Time: user.verifiedAt?.level3,
-    submittedAt: user.updatedAt || user.createdAt,
-  };
+      return {
+        _id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        teamName: user.teamName,
+        // Include level keys
+        SunKey: user.SunKey,
+        MoonKey: user.MoonKey,
+        // Set the key based on the user's level
+        key: user[`level${level}Key`] || user.SunKey,
+        level: level,
+        SunTime: user.verifiedAt?.Sun,
+        MoonTime: user.verifiedAt?.Moon,
+        submittedAt: user.updatedAt || user.createdAt,
+      };
 });
 
     console.log("Transformed results:", results);

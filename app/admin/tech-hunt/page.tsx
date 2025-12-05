@@ -47,13 +47,11 @@ export interface TechHuntResult {
   teamName: string;
   level: number;
   key: string;
-  level1Key: string;
-  level2Key?: string;
-  level3Key?: string;
+  SunKey: string;
+  MoonKey?: string;
   submittedAt: string;
-  level1Time?: string;
-  level2Time?: string;
-  level3Time?: string;
+  SunTime?: string;
+  MoonTime?: string;
 }
 
 export default function AdminTechHuntPage() {
@@ -416,24 +414,15 @@ export default function AdminTechHuntPage() {
                     <div className="flex items-center gap-2">
                       <Key className="h-4 w-4 text-gray-500" />
                       <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                        {selectedResult.level1Key}
+                        {selectedResult.SunKey}
                       </span>
                     </div>
 
-                    {selectedResult.level2Key && (
+                    {selectedResult.MoonKey && (
                       <div className="flex items-center gap-2">
                         <Key className="h-4 w-4 text-gray-500" />
                         <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                          {selectedResult.level2Key}
-                        </span>
-                      </div>
-                    )}
-
-                    {selectedResult.level3Key && (
-                      <div className="flex items-center gap-2">
-                        <Key className="h-4 w-4 text-gray-500" />
-                        <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                          {selectedResult.level3Key}
+                          {selectedResult.MoonKey}
                         </span>
                       </div>
                     )}
