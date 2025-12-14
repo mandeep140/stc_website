@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import XenithNav from "@/components/XenithNav";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Inter, Poppins } from "next/font/google";
-import Confetti from "react-confetti";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const poppins = Poppins({
@@ -14,6 +13,7 @@ const poppins = Poppins({
 import { AnimatePresence } from "framer-motion";
 import { Calendar } from "lucide-react";
 import { toIndianDateString } from "@/lib/formatDate";
+import Confetti from "react-confetti";
 
 interface Event {
   _id: string;
@@ -37,29 +37,23 @@ interface Event {
   _isEventEnded?: boolean;
 }
 
-interface TimeLeft {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isEventLive: boolean;
-}
+const Page = () => {
+  const { scrollYProgress } = useScroll();
+  const translateY = useTransform(scrollYProgress, [0, 0.3], ["0%", "100%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
-interface CountdownProps {
-  timeLeft: TimeLeft;
-  setTimeLeft: React.Dispatch<React.SetStateAction<TimeLeft>>;
-}
-
-const Countdown: React.FC<CountdownProps> = ({ timeLeft, setTimeLeft }) => {
+  const [isEventLive] = useState(true); // Event has concluded
   const [showConfetti, setShowConfetti] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [windowSize, setWindowSize] = useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 0,
-    height: typeof window !== "undefined" ? window.innerHeight : 0,
+    width: 0,
+    height: 0,
   });
-  const eventDate = new Date("2025-12-03T00:00:00").getTime();
-  const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
+    // Set mounted to true on client-side
+    setMounted(true);
+    
     const handleResize = () => {
       setWindowSize({
         width: window.innerWidth,
@@ -67,206 +61,30 @@ const Countdown: React.FC<CountdownProps> = ({ timeLeft, setTimeLeft }) => {
       });
     };
 
+    // Initial window size
+    handleResize();
+
+    // Show confetti after a small delay to ensure proper rendering
+    const confettiTimer = setTimeout(() => {
+      setShowConfetti(true);
+      
+      // Hide confetti after 5 seconds
+      const hideTimer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 5000);
+      
+      return () => clearTimeout(hideTimer);
+    }, 300);
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    const update = () => {
-      const now = Date.now();
-      const diff = eventDate - now;
-
-      if (diff <= 0) {
-        setTimeLeft((prev) => ({
-          ...prev,
-          days: 0,
-          hours: 0,
-          minutes: 0,
-          seconds: 0,
-          isEventLive: true,
-        }));
-
-        if (!hasTriggered) {
-          setShowConfetti(true);
-          setHasTriggered(true);
-          // Stop confetti after 8 seconds
-          const timer = setTimeout(() => {
-            setShowConfetti(false);
-          }, 8000);
-          return () => clearTimeout(timer);
-        }
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      setTimeLeft({
-        days,
-        hours,
-        minutes,
-        seconds,
-        isEventLive: false,
-      });
+    return () => {
+      clearTimeout(confettiTimer);
+      window.removeEventListener("resize", handleResize);
     };
-
-    update();
-    const t = setInterval(update, 1000);
-    return () => clearInterval(t);
-  }, [hasTriggered]);
-
-  const units = [
-    { label: "Days", value: timeLeft.days },
-    { label: "Hours", value: timeLeft.hours },
-    { label: "Minutes", value: timeLeft.minutes },
-    { label: "Seconds", value: timeLeft.seconds },
-  ];
-
-  return (
-    <div className="max-w-4xl mx-auto py-8 px-4 relative">
-      {showConfetti && (
-        <div className="fixed inset-0 z-50 pointer-events-none">
-          <Confetti
-            width={windowSize.width}
-            height={windowSize.height}
-            recycle={false}
-            numberOfPieces={500}
-            gravity={0.2}
-            colors={["#ba9efe", "#d4b3ff", "#6366f1", "#a78bfa", "#8b5cf6"]}
-          />
-        </div>
-      )}
-
-      {!timeLeft.isEventLive && (
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-gradient-to-r from-[#22143a]/40 to-[#0b1228]/40 border border-white/10 backdrop-blur-sm shadow-[0_0_18px_rgba(167,139,250,0.25)]">
-            <svg
-              className="w-4 h-4 text-[#e8d8ff] drop-shadow-[0_0_6px_rgba(212,179,255,0.9)]"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeOpacity="0.8"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M12 7v6l4 2"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="text-sm text-gray-300">
-              Event starts on <b>Dec 3, 2025</b>
-            </span>
-          </div>
-        </div>
-      )}
-
-      {!timeLeft.isEventLive && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-24">
-          {units.map((u) => (
-            <div
-              key={u.label}
-              className="relative flex items-center justify-center"
-            >
-              <div className="w-full">
-                <div
-                  className={`
-              rounded-2xl p-5 text-center
-              bg-gradient-to-b from-white/5 to-white/2
-              border border-white/10 backdrop-blur-sm
-
-              /* constant glow always visible */
-              shadow-[0_0_22px_rgba(167,139,250,0.28)]
-
-              /* slightly stronger glow on hover */
-              hover:shadow-[0_0_45px_rgba(167,139,250,0.45)]
-              hover:border-white/20
-
-              transition-all duration-300 ease-out
-            `}
-                >
-                  <div className="flex items-center justify-center" aria-hidden>
-                    <div className="relative">
-                      <div
-                        className="absolute inset-0 rounded-full blur-2xl animate-pulse-slow"
-                        style={{
-                          background:
-                            "linear-gradient(135deg,#ba9efe33,#6366f120)",
-                        }}
-                      />
-                      <div
-                        className="relative text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight"
-                        style={{
-                          background:
-                            "linear-gradient(90deg,#ba9efe 0%, #d4b3ff 40%, #6366f1 100%)",
-                          WebkitBackgroundClip: "text",
-                          color: "transparent",
-                        }}
-                      >
-                        {String(u.value).padStart(2, "0")}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 text-xs md:text-sm uppercase tracking-wider text-gray-300">
-                    {u.label}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <style jsx>{`
-        .animate-pulse-slow {
-          animation: pulseSlow 3.6s ease-in-out infinite;
-        }
-        @keyframes pulseSlow {
-          0% {
-            transform: scale(1);
-            opacity: 0.85;
-          }
-          50% {
-            transform: scale(1.06);
-            opacity: 0.6;
-          }
-          100% {
-            transform: scale(1);
-            opacity: 0.85;
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-const Page = () => {
-  const { scrollYProgress } = useScroll();
-  const translateY = useTransform(scrollYProgress, [0, 0.3], ["0%", "100%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    isEventLive: false,
-  });
+  }, []);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [mounted, setMounted] = useState(false);
   const [dots, setDots] = useState<
     Array<{
       width: number;
@@ -366,6 +184,20 @@ const Page = () => {
     <div
       className={`${inter.variable} ${poppins.variable} font-sans overflow-x-hidden`}
     >
+      {mounted && showConfetti && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={500}
+            gravity={0.2}
+            colors={["#ba9efe", "#d4b3ff", "#6366f1", "#a78bfa", "#8b5cf6"]}
+            onConfettiComplete={() => setShowConfetti(false)}
+            style={{ position: 'fixed', top: 0, left: 0 }}
+          />
+        </div>
+      )}
       <AnimatePresence mode="wait">
         <React.Fragment key="xenith-layout">
           <XenithNav key="xenith-nav" />
@@ -416,17 +248,16 @@ const Page = () => {
                       <h2 className="text-white text-xs md:text-sm font-medium tracking-[0.15em] text-center md:text-left uppercase font-mono opacity-90 mt-1 md:mt-2">
                         Where Innovation Touches Infinity
                       </h2>
-                      {timeLeft.isEventLive && (
+                      {isEventLive && (
                         <div className="mt-2 md:mt-3 flex items-center justify-center md:justify-start gap-2">
-                          <div className="relative flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/30">
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-400"></span>
+                          <div className="relative flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-gray-600/10 to-gray-700/10 border border-gray-500/20">
+                            <span className="relative flex items-center justify-center h-3 w-3">
+                              <svg className="h-2.5 w-2.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
                             </span>
                             <span className="text-purple-200 text-xs font-medium">
-                              XENITH is{" "}
-                              <span className="font-bold text-white">LIVE</span>{" "}
-                              Now
+                              <span className="font-bold text-white">XENITH 2025</span> was a grand success!
                             </span>
                           </div>
                         </div>
@@ -602,7 +433,6 @@ const Page = () => {
               </div>
 
               <div className="relative z-10 container mx-auto px-4 md:px-12 lg:px-20 pt-4">
-                <Countdown timeLeft={timeLeft} setTimeLeft={setTimeLeft} />
                 <div className="text-center mb-12 md:mb-16">
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <div className="h-1 w-8 md:w-12 bg-gradient-to-r from-transparent to-[#ba9efe]"></div>
@@ -1230,7 +1060,7 @@ const Page = () => {
                   </div>
 
                   {/* Become a Sponsor Card */}
-                  <a
+                  {/* <a
                     href="#contact"
                     className="group relative md:col-span-2 lg:col-span-1 cursor-pointer"
                   >
@@ -1268,10 +1098,10 @@ const Page = () => {
                       <div className="absolute bottom-2 left-2 w-3 h-3 md:w-4 md:h-4 border-b-2 border-l-2 border-[#ba9efe]"></div>
                       <div className="absolute bottom-2 right-2 w-3 h-3 md:w-4 md:h-4 border-b-2 border-r-2 border-[#ba9efe]"></div>
                     </div>
-                  </a>
+                  </a> */}
                 </div>
 
-                <div className="text-center mt-12 md:mt-16">
+                {/* <div className="text-center mt-12 md:mt-16">
                   <p className="text-gray-400 text-base md:text-lg mb-4 px-4">
                     Join us in shaping the future of technology
                   </p>
@@ -1281,7 +1111,7 @@ const Page = () => {
                   >
                     Contact Us for Sponsorship
                   </a>
-                </div>
+                </div> */}
               </div>
             </div>
 
